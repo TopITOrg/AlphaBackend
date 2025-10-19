@@ -74,27 +74,15 @@ func CreateUserHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 		return
 	}
 
-	var groupName string
-	groupName, groupNameConstructionError := wrapper.Db.Queries.GetGroupByID(ctx, user.ID)
-	if groupNameConstructionError != nil {
-		fmt.Println(groupNameConstructionError)
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Unknown error",
-		})
-		return
-	}
-
 	var response create_user.CreateUserResponse
 
 	responseMappingError := mapper.Mapper{}.Map(
 		&response,
 		user,
 		struct {
-			GroupName    string
 			AccessToken  string
 			RefreshToken string
 		}{
-			GroupName:    groupName,
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
 		},
