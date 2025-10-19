@@ -37,8 +37,25 @@ WHERE users.id = @id
     LIMIT 1;
 
 -- name: CreateUser :one
-INSERT INTO users
-(full_name, social_network_link, phone_number, email, birth_date, role, password, group_id)
-VALUES
-(@full_name, @social_network_link, @phone_number, @email, @birth_date, @role, @password, @group_id)
-RETURNING *;
+WITH user_info AS (
+    INSERT INTO users
+    (full_name, social_network_link, phone_number, email, birth_date, role, password, group_id)
+    VALUES (@full_name, @social_network_link, @phone_number, @email, @birth_date, @role, @password, @group_id)
+    RETURNING *
+),
+group_info AS (
+    SELECT 
+        (groups.prefix || '-' || 
+         extract(YEAR FROM age(now(), (groups.enrollment_year::text || '-09-01 00:00:00')::timestamptz)) + 1 || 
+         lpad(groups.group_number::text, 2, '0') || 
+         group_types.name || '-' || 
+         substring(groups.enrollment_year::text FROM 3 FOR 2)
+        )::text as group_name
+    FROM groups
+    LEFT JOIN group_types ON groups.group_type_id = group_types.id AND group_types.is_deleted = false
+    WHERE groups.id = @group_id AND groups.is_deleted = false
+)
+SELECT 
+    user_info.*,
+    group_info.group_name
+FROM user_info, group_info;

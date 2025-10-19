@@ -11,11 +11,28 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users
-(full_name, social_network_link, phone_number, email, birth_date, role, password, group_id)
-VALUES
-($1, $2, $3, $4, $5, $6, $7, $8)
-RETURNING id, full_name, social_network_link, phone_number, email, birth_date, role, password, group_id, created_at, updated_at, is_deleted
+WITH user_info AS (
+    INSERT INTO users
+    (full_name, social_network_link, phone_number, email, birth_date, role, password, group_id)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    RETURNING id, full_name, social_network_link, phone_number, email, birth_date, role, password, group_id, created_at, updated_at, is_deleted
+),
+group_info AS (
+    SELECT 
+        (groups.prefix || '-' || 
+         extract(YEAR FROM age(now(), (groups.enrollment_year::text || '-09-01 00:00:00')::timestamptz)) + 1 || 
+         lpad(groups.group_number::text, 2, '0') || 
+         group_types.name || '-' || 
+         substring(groups.enrollment_year::text FROM 3 FOR 2)
+        )::text as group_name
+    FROM groups
+    LEFT JOIN group_types ON groups.group_type_id = group_types.id AND group_types.is_deleted = false
+    WHERE groups.id = $8 AND groups.is_deleted = false
+)
+SELECT 
+    user_info.id, user_info.full_name, user_info.social_network_link, user_info.phone_number, user_info.email, user_info.birth_date, user_info.role, user_info.password, user_info.group_id, user_info.created_at, user_info.updated_at, user_info.is_deleted,
+    group_info.group_name
+FROM user_info, group_info
 `
 
 type CreateUserParams struct {
@@ -29,7 +46,23 @@ type CreateUserParams struct {
 	GroupID           *int64
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
+type CreateUserRow struct {
+	ID                int64
+	FullName          string
+	SocialNetworkLink string
+	PhoneNumber       string
+	Email             string
+	BirthDate         time.Time
+	Role              string
+	Password          []byte
+	GroupID           *int64
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	IsDeleted         bool
+	GroupName         string
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
 	row := q.db.QueryRow(ctx, createUser,
 		arg.FullName,
 		arg.SocialNetworkLink,
@@ -40,7 +73,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.Password,
 		arg.GroupID,
 	)
-	var i User
+	var i CreateUserRow
 	err := row.Scan(
 		&i.ID,
 		&i.FullName,
@@ -54,6 +87,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.IsDeleted,
+		&i.GroupName,
 	)
 	return i, err
 }
