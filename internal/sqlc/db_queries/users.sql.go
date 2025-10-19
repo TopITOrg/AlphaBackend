@@ -13,8 +13,16 @@ import (
 const createUser = `-- name: CreateUser :one
 INSERT INTO users
 (full_name, social_network_link, phone_number, email, birth_date, role, password, group_id)
-VALUES
-($1, $2, $3, $4, $5, $6, $7, $8)
+VALUES (
+    $1, 
+    $2, 
+    $3, 
+    $4, 
+    $5, 
+    $6, 
+    $7, 
+    $8
+)
 RETURNING id, full_name, social_network_link, phone_number, email, birth_date, role, password, group_id, created_at, updated_at, is_deleted
 `
 
@@ -56,6 +64,22 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.IsDeleted,
 	)
 	return i, err
+}
+
+const getGroupByID = `-- name: GetGroupByID :one
+SELECT (groups.prefix || '-' || extract(YEAR FROM age(now(), (groups.enrollment_year::text || '-09-01 00:00:00')::timestamptz)) + 1 || lpad(groups.group_number::text, 2, '0') || group_types.name || '-' || substring(enrollment_year::text FROM 3 FOR 2))::text as group_name
+FROM users
+    LEFT JOIN groups on users.group_id = groups.id AND groups.is_deleted = false
+    LEFT JOIN group_types on groups.group_type_id = group_types.id and group_types.is_deleted = false
+WHERE users.id = $1
+    LIMIT 1
+`
+
+func (q *Queries) GetGroupByID(ctx context.Context, id int64) (string, error) {
+	row := q.db.QueryRow(ctx, getGroupByID, id)
+	var group_name string
+	err := row.Scan(&group_name)
+	return group_name, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
