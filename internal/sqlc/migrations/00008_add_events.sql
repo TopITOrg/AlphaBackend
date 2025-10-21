@@ -1,5 +1,18 @@
 -- +goose Up
 -- +goose StatementBegin
+create table if not exists event_types
+(
+    id              bigint generated always as identity primary key,
+    name            varchar(255)    not null,
+    created_at      timestamptz     not null default now(),
+    updated_at      timestamptz     not null default now(),
+    is_deleted      bool            not null default false
+);
+
+create unique index if not exists event_types_uk
+    on event_types (name)
+    where event_types.is_deleted = false;
+
 create table if not exists events
 (
     id                  bigint generated always as identity primary key,
@@ -20,20 +33,7 @@ create table if not exists events
     constraint fk_event_sport_type foreign key (sport_type_id) references sport_types (id) on delete restrict,
     constraint fk_event_creator foreign key (creator_id) references users (id) on delete restrict,
     constraint fk_event_type_id foreign key (type_id) references event_types (id) on delete restrict
-)
-
-create table if not exists event_types
-(
-    id              bigint generated always as identity primary key,
-    name            varchar(255)    not null,
-    created_at      timestamptz     not null default now(),
-    updated_at      timestamptz     not null default now(),
-    is_deleted      bool            not null default false
 );
-
-create unique index if not exists event_types_uk
-    on event_types (name)
-    where event_types.is_deleted = false;
 
 create table if not exists achievements
 (
@@ -50,7 +50,7 @@ create table if not exists achievements
 
 create unique index if not exists achievements_uk
     on achievements (event_id, user_id, place)
-    where achievements.is_delited = false;
+    where achievements.is_deleted = false;
 
 create table if not exists event_join_requests
 (
