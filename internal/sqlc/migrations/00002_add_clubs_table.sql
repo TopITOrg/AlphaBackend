@@ -41,8 +41,8 @@ create table if not exists clubs
     updated_at                  timestamptz not null default now(),
     is_deleted                  bool not null default false,
 
-    constraint fk_sport_type foreign key (sport_type_id) references sport_types (id) on delete restrict,
-    constraint fk_teacher_id foreign key (teacher_id) references users (id) on delete restrict,
+    constraint fk_club_sport_type foreign key (sport_type_id) references sport_types (id) on delete restrict,
+    constraint fk_teacher foreign key (teacher_id) references users (id) on delete restrict,
     constraint fk_education_level foreign key (education_level_id) references education_levels (id) on delete restrict
 );
 
@@ -61,13 +61,25 @@ create table if not exists reviews
     updated_at      timestamptz not null default now(),
     is_deleted      bool not null default false,
 
-    constraint fk_creator_id foreign key (creator_id) references users (id) on delete restrict
+    constraint fk_reviewer foreign key (creator_id) references users (id) on delete restrict,
+    constraint fk_reviewed_club foreign key (club_id) references clubs (id) on delete restrict
+
 );
 
 create unique index if not exists reviews_uk
     on reviews (creator_id, club_id)
     where reviews.is_deleted = false;
 
+create table if not exists review_attachments
+(
+    review_id       bigint not null,
+    attachment_id   bigint not null,
+
+    constraint fk_review_id foreign key (review_id) references reviews (id) on delete restrict,
+    constraint fk_review_attachment_id foreign key (attachment_id) references attachments (id) on delete restrict
+)
+create unique index if not exists review_attachments_uk
+    on review_attachments (review_id, attachment_id)
 -- +goose StatementEnd
 
 -- +goose Down
@@ -76,4 +88,5 @@ drop table if exists sport_types;
 drop table if exists education_levels;
 drop table if exists clubs;
 drop table if exists reviews;
+drop table if exists review_attachments;
 -- +goose StatementEnd
