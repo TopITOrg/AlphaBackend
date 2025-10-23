@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-create table if not exists sport_types
+create table sport_types
 (
     id         bigint generated always as identity primary key, 
     name       varchar(255) not null,
@@ -9,11 +9,11 @@ create table if not exists sport_types
     is_deleted bool not null default false
 );
 
-create unique index if not exists sport_types_uk
+create unique index sport_types_uk
     on sport_types (name)
     where sport_types.is_deleted = false;
 
-create table if not exists education_levels
+create table education_levels
 (
     id          bigint generated always as identity primary key,
     name        varchar(255) not null,
@@ -22,11 +22,11 @@ create table if not exists education_levels
     is_deleted bool         not null default false
 );
 
-create unique index if not exists education_levels_uk
+create unique index education_levels_uk
     on education_levels (name)
     where education_levels.is_deleted = false;
 
-create table if not exists clubs
+create table clubs
 (
     id                          bigint generated always as identity primary key,
     name                        varchar(255) not null,
@@ -46,11 +46,11 @@ create table if not exists clubs
     constraint fk_education_level foreign key (education_level_id) references education_levels (id) on delete restrict
 );
 
-create unique index if not exists clubs_uk
+create unique index clubs_uk
     on clubs (name, sport_type_id, teacher_id, education_level_id)
     where clubs.is_deleted = false;
 
-create table if not exists reviews
+create table reviews
 (
     id              bigint generated always as identity primary key,
     rating          int not null,
@@ -66,11 +66,11 @@ create table if not exists reviews
 
 );
 
-create unique index if not exists reviews_uk
+create unique index reviews_uk
     on reviews (creator_id, club_id)
     where reviews.is_deleted = false;
 
-create table if not exists review_attachments
+create table review_attachments
 (
     review_id       bigint not null,
     attachment_id   bigint not null,
@@ -78,7 +78,7 @@ create table if not exists review_attachments
     constraint fk_review_id foreign key (review_id) references reviews (id) on delete restrict,
     constraint fk_review_attachment_id foreign key (attachment_id) references attachments (id) on delete restrict
 )
-create unique index if not exists review_attachments_uk
+create unique index review_attachments_uk
     on review_attachments (review_id, attachment_id)
 -- +goose StatementEnd
 

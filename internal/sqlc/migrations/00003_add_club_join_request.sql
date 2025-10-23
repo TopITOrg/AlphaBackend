@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-create table if not exists club_join_requests
+create table club_join_requests
 (
     id         bigint generated always as identity primary key, 
     club_id    bigint not null,
@@ -13,7 +13,7 @@ create table if not exists club_join_requests
     constraint fk_user_joining_club foreign key (user_id) references users (id) on delete restrict,
     constraint fk_joined_club foreign key (club_id) references clubs (id) on delete restrict
 );
-create unique index if not exists club_join_requests_uk
+create unique index club_join_requests_uk
     on club_join_requests (club_id, user_id)
     where club_join_requests.is_deleted = false;
 -- +goose StatementEnd

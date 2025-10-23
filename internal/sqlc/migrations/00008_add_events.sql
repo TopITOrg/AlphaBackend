@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-create table if not exists event_types
+create table event_types
 (
     id              bigint generated always as identity primary key,
     name            varchar(255)    not null,
@@ -9,11 +9,11 @@ create table if not exists event_types
     is_deleted      bool            not null default false
 );
 
-create unique index if not exists event_types_uk
+create unique index event_types_uk
     on event_types (name)
     where event_types.is_deleted = false;
 
-create table if not exists events
+create table events
 (
     id                  bigint generated always as identity primary key,
     name                varchar(255)    not null,
@@ -35,7 +35,7 @@ create table if not exists events
     constraint fk_event_type_id foreign key (type_id) references event_types (id) on delete restrict
 );
 
-create table if not exists achievements
+create table achievements
 (
     user_id             bigint      not null,
     event_id            bigint      not null,
@@ -48,11 +48,11 @@ create table if not exists achievements
     constraint fk_user_achievement foreign key (user_id) references users (id) on delete restrict
 );
 
-create unique index if not exists achievements_uk
+create unique index achievements_uk
     on achievements (event_id, user_id, place)
     where achievements.is_deleted = false;
 
-create table if not exists event_join_requests
+create table event_join_requests
 (
     id          bigint generated always as identity primary key, 
     event_id    bigint       not null,
@@ -66,7 +66,7 @@ create table if not exists event_join_requests
     constraint fk_user_joining_event foreign key (user_id) references users (id) on delete restrict
 );
 
-create unique index if not exists event_join_requests_uk
+create unique index event_join_requests_uk
     on event_join_requests (event_id, user_id)
     where event_join_requests.is_deleted = false;
 -- +goose StatementEnd

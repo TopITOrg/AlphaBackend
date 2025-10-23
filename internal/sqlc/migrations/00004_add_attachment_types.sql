@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-create table if not exists attachment_types
+create table attachment_types
 (
     id              bigint generated always as identity primary key,
     name            varchar(128)    not null,

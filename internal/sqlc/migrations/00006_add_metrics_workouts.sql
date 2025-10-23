@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-create table if not exists workouts
+create table workouts
 (
     id              bigint generated always as identity primary key,
     club_id         bigint      not null,
@@ -13,7 +13,7 @@ create table if not exists workouts
 
     constraint fk_workout_club_id foreign key (club_id) references clubs (id) on delete restrict
 );
-create table if not exists metrics
+create table metrics
 (
     id                  bigint generated always as identity primary key,
     name                varchar(255)    not null,
@@ -27,11 +27,11 @@ create table if not exists metrics
     constraint fk_metrics_club foreign key (club_id) references clubs (id) on delete restrict
 );
 
-create unique index if not exists metrics_uk
+create unique index metrics_uk
     on metrics (name, description, units, club_id)
     where metrics.is_deleted = false;
 
-create table if not exists workout_attendees
+create table workout_attendees
 (
     id              bigint generated always as identity primary key,
     workout_id      bigint      not null,
@@ -46,10 +46,10 @@ create table if not exists workout_attendees
     constraint fk_club_request_id foreign key (request_id) references club_join_requests (id) on delete restrict
 );
 
-create unique index if not exists workout_attendees_uk
+create unique index workout_attendees_uk
     on workout_attendees (workout_id, request_id)
     where workout_attendees.is_deleted = false;
-create table if not exists workout_metrics
+create table workout_metrics
 (
     workout_attendee_id         bigint                    not null,
     metric_id                   bigint                    not null,
@@ -62,11 +62,11 @@ create table if not exists workout_metrics
     constraint fk_workout_metric_id foreign key (metric_id) references metrics (id) on delete restrict
 );
 
-create unique index if not exists workout_metrics_pk
+create unique index workout_metrics_pk
     on workout_metrics (workout_attendee_id, metric_id)
     where workout_metrics.is_deleted = false;
 
-create table if not exists metrics_targets
+create table metrics_targets
 (
     metric_id       bigint                   not null,
     user_id         bigint                   not null,
@@ -79,7 +79,7 @@ create table if not exists metrics_targets
     constraint fk_target_user_id foreign key (user_id) references users (id) on delete restrict
 );
 
-create unique index if not exists metrics_targets_uk
+create unique index metrics_targets_uk
     on metrics_targets (metric_id, user_id)
     where metrics_targets.is_deleted = false;
 

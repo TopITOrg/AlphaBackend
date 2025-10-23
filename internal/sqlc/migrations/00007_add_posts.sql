@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-create table if not exists posts
+create table posts
 (
     id              bigint generated always as identity primary key,
     title           varchar(255) not null,
@@ -13,7 +13,7 @@ create table if not exists posts
     constraint fk_post_creator foreign key (creator_id) references users (id) on delete restrict
 );
 
-create table if not exists post_attachments
+create table post_attachments
 (
     post_id         bigint not null,
     attachment_id   bigint not null,
@@ -22,10 +22,10 @@ create table if not exists post_attachments
     constraint fk_post_attachment foreign key (attachment_id) references attachments (id) on delete restrict
 );
 
-create unique index if not exists post_attachment_uk
+create unique index post_attachment_uk
     on post_attachments (post_id, attachment_id);
 
-create table if not exists tags
+create table tags
 (
     id              bigint generated always as identity primary key,
     name            varchar(255)    not null,
@@ -34,11 +34,11 @@ create table if not exists tags
     is_deleted      bool            not null default false
 );
 
-create unique index if not exists tags_uk
+create unique index tags_uk
     on tags (name)
     where tags.is_deleted = false;
 
-create table if not exists post_tags
+create table post_tags
 (
     post_id     bigint not null,
     tag_id      bigint not null,
@@ -47,7 +47,7 @@ create table if not exists post_tags
     constraint fk_tag_id foreign key (tag_id) references tags (id) on delete restrict
 );
 
-create unique index if not exists post_tags_uk
+create unique index post_tags_uk
     on post_tags (post_id, tag_id);
 -- +goose StatementEnd
 
