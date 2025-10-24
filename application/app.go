@@ -146,3 +146,22 @@ func CreateApplication() *Application {
 		configuration: configuration.CreateConfiguration(),
 	}
 }
+
+func (appl *Application) Configure(engine *gin.Engine) error {
+    envGetterError := appl.GetEnv()
+    if envGetterError != nil {
+        return envGetterError
+    }
+
+    clientsConstructionError := appl.ConstructClients()
+    if clientsConstructionError != nil {
+        return clientsConstructionError
+    }
+
+    engine.Use(middleware.AuthMiddleware(appl.wrapper))
+
+    controllers.UserController(engine, appl.wrapper)
+    controllers.SportClubsController(engine, appl.wrapper) // Добавляем эту строку
+
+    return nil
+}
