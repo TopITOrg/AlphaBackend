@@ -2,10 +2,10 @@
 -- +goose StatementBegin
 create table group_types
 (
-    id         bigint generated always as identity primary key,
+    id         bigserial primary key,
     name       varchar(128) not null,
-    created_at timestamptz  not null default now(),
-    updated_at timestamptz  not null default now(),
+    created_at timestamp    not null default now(),
+    updated_at timestamp    not null default now(),
     is_deleted bool         not null default false
 );
 
@@ -15,14 +15,14 @@ create unique index group_types_name_uk
 
 create table groups
 (
-    id              bigint generated always as identity primary key,
+    id              bigserial primary key,
     institute       varchar(64) not null,
     enrollment_year integer     not null,
     prefix          varchar(32),
     group_type_id   bigint      not null,
     group_number    smallint,
-    created_at      timestamptz not null default now(),
-    updated_at      timestamptz not null default now(),
+    created_at      timestamp   not null default now(),
+    updated_at      timestamp   not null default now(),
     is_deleted      bool        not null default false,
 
     constraint fk_group_type foreign key (group_type_id) references group_types (id) on delete restrict
@@ -34,17 +34,17 @@ create unique index groups_uk
 
 create table users
 (
-    id                  bigint generated always as identity primary key,
+    id                  bigserial primary key,
     full_name           varchar(255) not null,
     social_network_link varchar(255) not null,
     phone_number        varchar(32)  not null,
     email               varchar(255) not null,
-    birth_date          timestamptz  not null,
+    birth_date          timestamp    not null,
     role                varchar(128) not null,
     password            bytea        not null,
     group_id            bigint,
-    created_at          timestamptz  not null default now(),
-    updated_at          timestamptz  not null default now(),
+    created_at          timestamp    not null default now(),
+    updated_at          timestamp    not null default now(),
     is_deleted          bool         not null default false,
 
     constraint fk_group foreign key (group_id) references groups (id) on delete restrict
@@ -66,7 +66,7 @@ create unique index users_phone_number_uk
 
 -- +goose Down
 -- +goose StatementBegin
-drop table if exists groups;
-drop table if exists group_types;
-drop table if exists users;
+drop table users;
+drop table groups;
+drop table group_types;
 -- +goose StatementEnd

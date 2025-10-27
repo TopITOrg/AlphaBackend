@@ -2,9 +2,9 @@
 -- +goose StatementBegin
 create table attachment_types
 (
-    id              bigint generated always as identity primary key,
+    id              bigserial primary key,
     name            varchar(128)    not null,
-    created_at      timestamptz     not null default now(),
+    created_at      timestamp       not null default now(),
     is_deleted      bool            not null default false
 );
 
@@ -15,5 +15,5 @@ create unique index attachment_types_uk
 
 -- +goose Down
 -- +goose StatementBegin
-drop table if exists attachment_types;
+drop table attachment_types;
 -- +goose StatementEnd

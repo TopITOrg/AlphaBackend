@@ -2,12 +2,12 @@
 -- +goose StatementBegin
 create table club_join_requests
 (
-    id         bigint generated always as identity primary key, 
-    club_id    bigint not null,
-    user_id    bigint not null,
+    id         bigserial primary key, 
+    club_id    bigint       not null,
+    user_id    bigint       not null,
     status     varchar(128) not null,
-    created_at timestamptz  not null default now(),
-    updated_at timestamptz  not null default now(),
+    created_at timestamp    not null default now(),
+    updated_at timestamp    not null default now(),
     is_deleted bool         not null default false,
 
     constraint fk_user_joining_club foreign key (user_id) references users (id) on delete restrict,
@@ -20,5 +20,5 @@ create unique index club_join_requests_uk
 
 -- +goose Down
 -- +goose StatementBegin
-drop table if exists club_join_requests;
+drop table club_join_requests;
 -- +goose StatementEnd

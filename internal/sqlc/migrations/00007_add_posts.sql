@@ -2,12 +2,12 @@
 -- +goose StatementBegin
 create table posts
 (
-    id              bigint generated always as identity primary key,
+    id              bigserial primary key,
     title           varchar(255) not null,
     content         text         not null,
     creator_id      bigint       not null,
-    created_at      timestamptz  not null default now(),
-    updated_at      timestamptz  not null default now(),
+    created_at      timestamp    not null default now(),
+    updated_at      timestamp    not null default now(),
     is_deleted      bool         not null default false,
 
     constraint fk_post_creator foreign key (creator_id) references users (id) on delete restrict
@@ -27,10 +27,10 @@ create unique index post_attachment_uk
 
 create table tags
 (
-    id              bigint generated always as identity primary key,
+    id              bigserial primary key,
     name            varchar(255)    not null,
-    created_at      timestamptz     not null default now(),
-    updated_at      timestamptz     not null default now(),
+    created_at      timestamp       not null default now(),
+    updated_at      timestamp       not null default now(),
     is_deleted      bool            not null default false
 );
 
@@ -53,9 +53,8 @@ create unique index post_tags_uk
 
 -- +goose Down
 -- +goose StatementBegin
-drop table if exists posts;
-drop table if exists post_attachments;
-drop table if exists post_tags;
-drop table if exists tags;
-
+drop table post_attachments;
+drop table post_tags;
+drop table posts;
+drop table tags;
 -- +goose StatementEnd

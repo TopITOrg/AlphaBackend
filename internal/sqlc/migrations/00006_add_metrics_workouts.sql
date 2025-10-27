@@ -2,26 +2,26 @@
 -- +goose StatementBegin
 create table workouts
 (
-    id              bigint generated always as identity primary key,
+    id              bigserial primary key,
     club_id         bigint      not null,
-    start_date      timestamptz not null,
-    end_date        timestamptz not null,
+    start_date      timestamp   not null,
+    end_date        timestamp   not null,
     cancelled       bool        not null default false,
-    created_at      timestamptz not null default now(),
-    updated_at      timestamptz not null default now(),
+    created_at      timestamp   not null default now(),
+    updated_at      timestamp   not null default now(),
     is_deleted      bool        not null default false,
 
     constraint fk_workout_club_id foreign key (club_id) references clubs (id) on delete restrict
 );
 create table metrics
 (
-    id                  bigint generated always as identity primary key,
+    id                  bigserial primary key,
     name                varchar(255)    not null,
     description         text            not null,
     units               varchar(32)     not null,
     club_id             bigint          not null,
-    created_at          timestamptz     not null default now(),
-    updated_at          timestamptz     not null default now(),
+    created_at          timestamp       not null default now(),
+    updated_at          timestamp       not null default now(),
     is_deleted          bool            not null default false,
 
     constraint fk_metrics_club foreign key (club_id) references clubs (id) on delete restrict
@@ -33,13 +33,13 @@ create unique index metrics_uk
 
 create table workout_attendees
 (
-    id              bigint generated always as identity primary key,
+    id              bigserial primary key,
     workout_id      bigint      not null,
     request_id      bigint      not null,
     visited         bool        not null default false,
     review          text,
-    created_at      timestamptz not null default now(),
-    updated_at      timestamptz not null default now(),
+    created_at      timestamp   not null default now(),
+    updated_at      timestamp   not null default now(),
     is_deleted      bool        not null default false,
 
     constraint fk_attended_workout_id foreign key (workout_id) references workouts (id) on delete restrict,
@@ -54,8 +54,8 @@ create table workout_metrics
     workout_attendee_id         bigint                    not null,
     metric_id                   bigint                    not null,
     value                       double precision          not null,
-    created_at                  timestamptz               not null default now(),
-    updated_at                  timestamptz               not null default now(),
+    created_at                  timestamp                 not null default now(),
+    updated_at                  timestamp                 not null default now(),
     is_deleted                  bool                      not null default false,
 
     constraint fk_attendee_id foreign key (workout_attendee_id) references workout_attendees (id) on delete restrict,
@@ -71,8 +71,8 @@ create table metrics_targets
     metric_id       bigint                   not null,
     user_id         bigint                   not null,
     value           double precision         not null,
-    created_at      timestamptz              not null default now(),
-    updated_at      timestamptz              not null default now(),
+    created_at      timestamp                not null default now(),
+    updated_at      timestamp                not null default now(),
     is_deleted      bool                     not null default false,
 
     constraint fk_target_metric_id foreign key (metric_id) references metrics (id) on delete restrict,
@@ -87,9 +87,9 @@ create unique index metrics_targets_uk
 
 -- +goose Down
 -- +goose StatementBegin
-drop table if exists metrics;
-drop table if exists workout_metrics;
-drop table if exists metrics_targets;
-drop table if exists workout_attendees;
-drop table if exists workouts;
+drop table workout_metrics;
+drop table metrics_targets;
+drop table workout_attendees;
+drop table metrics;
+drop table workouts;
 -- +goose StatementEnd
