@@ -53,7 +53,7 @@ func DeleteUserHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 
 	match, formatError := wrapper.PasswordHandler.VerifyPassword(request.Password, user.Password)
 	if formatError != nil {
-		fmt.Printf("Error happened during login: %s\n", formatError)
+		fmt.Printf("Error happened during password verification: %s\n", formatError)
 		ctx.JSON(
 			http.StatusInternalServerError,
 			gin.H{
