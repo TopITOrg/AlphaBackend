@@ -12,6 +12,14 @@ sql:
         emit_interface: true
         emit_empty_slices: true
         overrides:
+          - db_type: "pg_catalog.timestamp"
+            go_type:
+              type: "time.Time"
+          - db_type: "pg_catalog.timestamp"
+            nullable: true
+            go_type:
+              type: "*time.Time"
+              pointer: true
           - db_type: "timestamptz"
             go_type:
               type: "time.Time"
