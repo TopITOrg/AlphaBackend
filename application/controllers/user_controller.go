@@ -18,4 +18,7 @@ func UserController(engine *gin.Engine, wrapper *service_wrapper.Wrapper) {
 	routerGroup.GET("/", func(context *gin.Context) {
 		handlers.GetUserHandler(context, wrapper)
 	})
+	routerGroup.DELETE("/delete", func(context *gin.Context) {
+		handlers.DeleteUserHandler(context, wrapper)
+	})
 }

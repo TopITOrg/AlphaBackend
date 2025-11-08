@@ -58,3 +58,9 @@ SELECT
 FROM user_info
 LEFT JOIN groups ON groups.id = user_info.group_id AND groups.is_deleted = false
 LEFT JOIN group_types ON groups.group_type_id = group_types.id AND group_types.is_deleted = false;
+
+-- name: DeleteUser :exec
+UPDATE users
+SET
+    is_deleted = true
+WHERE email = @email and is_deleted = false;
