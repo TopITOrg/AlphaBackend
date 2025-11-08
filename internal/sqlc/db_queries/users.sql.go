@@ -204,10 +204,9 @@ SET
     social_network_link = COALESCE($2, social_network_link),
     phone_number = COALESCE($3, phone_number),
     email = COALESCE($4, email),
-    birth_date = COALESCE($5, birth_date),
-    password = COALESCE($6, password),
+    password = COALESCE($5, password),
     updated_at = NOW()
-WHERE users.id = $7
+WHERE users.id = $6
 RETURNING
     users.id, users.full_name, users.social_network_link, users.phone_number, users.email, users.birth_date, users.role, users.password, users.group_id, users.created_at, users.updated_at, users.is_deleted,
     COALESCE((
@@ -228,7 +227,6 @@ type UpdateUserParams struct {
 	SocialNetworkLink *string
 	PhoneNumber       *string
 	Email             *string
-	BirthDate         time.Time
 	Password          []byte
 	ID                int64
 }
@@ -255,7 +253,6 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateU
 		arg.SocialNetworkLink,
 		arg.PhoneNumber,
 		arg.Email,
-		arg.BirthDate,
 		arg.Password,
 		arg.ID,
 	)

@@ -66,7 +66,6 @@ SET
     social_network_link = COALESCE(sqlc.narg(social_network_link), social_network_link),
     phone_number = COALESCE(sqlc.narg(phone_number), phone_number),
     email = COALESCE(sqlc.narg(email), email),
-    birth_date = COALESCE(sqlc.arg(birth_date), birth_date),
     password = COALESCE(sqlc.arg(password), password),
     updated_at = NOW()
 WHERE users.id = @id
