@@ -67,7 +67,7 @@ func CreateUserHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 
 	accessToken, refreshToken, tokenGenerationError := wrapper.JwtHandler.GenerateJwtPair(userClaims, fmt.Sprintf("%d", user.ID))
 	if tokenGenerationError != nil {
-		fmt.Println(claimsMappingError)
+		fmt.Println(tokenGenerationError)
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Unknown error",
 		})

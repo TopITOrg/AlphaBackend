@@ -8,6 +8,7 @@ import (
 	"sport_platform/application/models/shared"
 	"sport_platform/internal/middleware"
 	"sport_platform/internal/service_wrapper"
+	"sport_platform/internal/sqlc/db_queries"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,7 +27,7 @@ func DeleteClubHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 
 	userClaims := claimsRaw.(claims.UserClaims)
 
-	if userClaims.Role != shared.Teacher && userClaims.Role != string(shared.Admin) {
+	if userClaims.Role != shared.Teacher && userClaims.Role != shared.Admin {
 		ctx.JSON(
 			http.StatusForbidden,
 			gin.H{
@@ -36,40 +37,52 @@ func DeleteClubHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 		return
 	}
 
-	clubID, err := parseInt64Param(ctx, "id")
-	if err != nil || clubID == 0 {
+	var request delete_club.DeleteClubRequest
+	if err := ctx.ShouldBindUri(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid club ID format in URL",
+		})
+		return
+	}
+
+	if request.ID <= 0 {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "Invalid club ID",
 		})
 		return
 	}
 
-	accessToken, refreshToken, tokenGenerationError := wrapper.JwtHandler.GenerateJwtPair(userClaims, fmt.Sprint(userClaims.ID))
-	if tokenGenerationError != nil {
-		fmt.Println(tokenGenerationError)
+	if userClaims.Role == shared.Teacher {
+		count, err := wrapper.Db.Queries.CheckClubOwnership(ctx, db_queries.CheckClubOwnershipParams{
+			ID:        request.ID,
+			TeacherID: userClaims.ID,
+		})
+		if err != nil || count == 0 {
+			ctx.JSON(
+				http.StatusForbidden,
+				gin.H{
+					"message": "You can only delete your own clubs",
+				},
+			)
+			return
+		}
+	}
+
+	err := wrapper.Db.Queries.SoftDeleteClub(ctx, request.ID)
+	if err != nil {
+		fmt.Println(err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Unknown error",
+			"message": "Failed to delete club",
 		})
 		return
 	}
 
 	response := delete_club.DeleteClubResponse{
-		IsDeleted:    true,
-		Message:      "Club deleted",
-		ClubID:       clubID,
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+		ClubID: request.ID,
 	}
 
 	ctx.JSON(
 		http.StatusOK,
 		response,
 	)
-}
-
-func parseInt64Param(ctx *gin.Context, param string) (int64, error) {
-	idStr := ctx.Param(param)
-	var id int64
-	_, err := fmt.Sscanf(idStr, "%d", &id)
-	return id, err
 }

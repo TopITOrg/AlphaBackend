@@ -14,7 +14,4 @@ type CreateClubResponse struct {
 	RequiredWorkoutPerWeek int       `json:"required_workout_per_week"`
 	CreatedAt              time.Time `json:"created_at"`
 	UpdatedAt              time.Time `json:"updated_at"`
-	IsDeleted              bool      `json:"is_deleted"`
-	AccessToken            string    `json:"access_token"`
-	RefreshToken           string    `json:"refresh_token"`
 }

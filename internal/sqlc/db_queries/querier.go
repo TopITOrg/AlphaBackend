@@ -9,9 +9,15 @@ import (
 )
 
 type Querier interface {
+	CheckClubOwnership(ctx context.Context, arg CheckClubOwnershipParams) (int64, error)
+	CreateClub(ctx context.Context, arg CreateClubParams) (Club, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
+	GetClubByID(ctx context.Context, id int64) (Club, error)
+	GetClubsByTeacher(ctx context.Context, teacherID int64) ([]Club, error)
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
 	GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error)
+	ListActiveClubs(ctx context.Context) ([]Club, error)
+	SoftDeleteClub(ctx context.Context, id int64) error
 }
 
 var _ Querier = (*Queries)(nil)
