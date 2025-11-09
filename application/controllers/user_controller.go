@@ -15,7 +15,7 @@ func UserController(engine *gin.Engine, wrapper *service_wrapper.Wrapper) {
 	routerGroup.POST("/login", func(context *gin.Context) {
 		handlers.LoginHandler(context, wrapper)
 	})
-	routerGroup.PATCH("/update", func(context *gin.Context) {
+	routerGroup.PUT("/update", func(context *gin.Context) {
 		handlers.UpdateUserHandler(context, wrapper)
 	})
 	routerGroup.GET("/", func(context *gin.Context) {
