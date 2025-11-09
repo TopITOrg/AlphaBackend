@@ -29,8 +29,11 @@ type Application struct {
 }
 
 func (appl *Application) GetEnv() error {
-	appEnvLoader := env_loader.CreateLoaderFromEnv()
-
+	// Загружаем из .env файла
+	appEnvLoader, err := env_loader.CreateLoaderFromFile(".env")
+	if err != nil {
+		return err
+	}
 	var dbConfig db.Config
 	if err := appEnvLoader.LoadDataIntoStruct(&dbConfig); err != nil {
 		return err
@@ -95,6 +98,7 @@ func (appl *Application) Configure(engine *gin.Engine) error {
 	engine.Use(middleware.AuthMiddleware(appl.wrapper))
 
 	controllers.UserController(engine, appl.wrapper)
+	controllers.ClubController(engine, appl.wrapper)
 
 	return nil
 }
