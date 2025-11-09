@@ -38,26 +38,49 @@ func DeleteClubHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 	}
 
 	var request delete_club.DeleteClubRequest
-	if err := ctx.ShouldBindUri(&request); err != nil {
+	var err error
+	if err = ctx.ShouldBindUri(&request); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "Invalid club ID format in URL",
 		})
 		return
 	}
 
-	if request.ID <= 0 {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "Invalid club ID",
+	exists, err = wrapper.Db.Queries.CheckClubExists(ctx, request.ID)
+
+	if err != nil {
+		fmt.Println(err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Database error while checking club existence",
+		})
+		return
+	}
+
+	if !exists {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"message": "Club not found or already deleted",
 		})
 		return
 	}
 
 	if userClaims.Role == shared.Teacher {
-		count, err := wrapper.Db.Queries.CheckClubOwnership(ctx, db_queries.CheckClubOwnershipParams{
+		var count int64
+		count, err = wrapper.Db.Queries.CheckClubOwnership(ctx, db_queries.CheckClubOwnershipParams{
 			ID:        request.ID,
 			TeacherID: userClaims.ID,
 		})
-		if err != nil || count == 0 {
+		if err != nil {
+			fmt.Println(err)
+			ctx.JSON(
+				http.StatusInternalServerError,
+				gin.H{
+					"message": "Database error while checking ownership",
+				},
+			)
+			return
+		}
+
+		if count == 0 {
 			ctx.JSON(
 				http.StatusForbidden,
 				gin.H{
@@ -68,7 +91,7 @@ func DeleteClubHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 		}
 	}
 
-	err := wrapper.Db.Queries.SoftDeleteClub(ctx, request.ID)
+	err = wrapper.Db.Queries.SoftDeleteClub(ctx, request.ID)
 	if err != nil {
 		fmt.Println(err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{

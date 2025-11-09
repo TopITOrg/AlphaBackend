@@ -9,7 +9,10 @@ import (
 )
 
 type Querier interface {
+	CheckClubExists(ctx context.Context, id int64) (bool, error)
 	CheckClubOwnership(ctx context.Context, arg CheckClubOwnershipParams) (int64, error)
+	CheckEducationLevelExists(ctx context.Context, id int64) (bool, error)
+	CheckSportTypeExists(ctx context.Context, id int64) (bool, error)
 	CreateClub(ctx context.Context, arg CreateClubParams) (Club, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	GetClubByID(ctx context.Context, id int64) (Club, error)

@@ -46,24 +46,41 @@ func CreateClubHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 		return
 	}
 
-	if request.TotalPlaces <= 0 {
+	if request.TotalPlaces < 0 {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "TotalPlaces must be greater than zero.",
+			"message": "TotalPlaces must be greater than or equal to 0.",
 		})
 		return
 	}
 
-	if request.RequiredWorkoutPerWeek < 0 || request.RequiredWorkoutPerWeek > 7 {
+	if request.RequiredWorkoutPerWeek <= 0 {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "RequiredWorkoutPerWeek must be between 0 and 7.",
+			"message": "RequiredWorkoutPerWeek must be greater than 0.",
 		})
 		return
 	}
 
-	if userClaims.Role == shared.Teacher {
-		request.TeacherID = userClaims.ID
+	existsSport, err := wrapper.Db.Queries.CheckSportTypeExists(ctx, request.SportTypeID)
+	if err != nil {
+		fmt.Println(err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Database error checking sport type"})
+		return
+	}
+	if !existsSport {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Invalid SportTypeID provided"})
+		return
 	}
 
+	existsEducation, err := wrapper.Db.Queries.CheckEducationLevelExists(ctx, request.EducationLevelID)
+	if err != nil {
+		fmt.Println(err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Database error checking education level"})
+		return
+	}
+	if !existsEducation {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Invalid EducationLevelID provided"})
+		return
+	}
 	if userClaims.Role == shared.Teacher {
 		request.TeacherID = userClaims.ID
 	}
@@ -83,7 +100,7 @@ func CreateClubHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 	if err != nil {
 		fmt.Println(err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to create club",
+			"message": "Unknown error",
 		})
 		return
 	}
