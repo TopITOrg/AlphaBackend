@@ -9,7 +9,11 @@ import (
 )
 
 type Querier interface {
+	CreateJoinRequest(ctx context.Context, arg CreateJoinRequestParams) (ClubJoinRequest, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
+	GetAllJoinRequests(ctx context.Context) ([]ClubJoinRequest, error)
+	GetJoinRequestById(ctx context.Context, id int64) (ClubJoinRequest, error)
+	GetJoinRequestsByClub(ctx context.Context, clubID int64) ([]ClubJoinRequest, error)
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
 	GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error)
 }

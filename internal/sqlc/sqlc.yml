@@ -27,3 +27,11 @@ sql:
             nullable: true
             go_type:
               type: "*[]byte"
+          - db_type: "pg_catalog.timestamp"
+            go_type:
+              type: "time.Time"
+          - db_type: "pg_catalog.timestamp"
+            nullable: true
+            go_type:
+              type: "*time.Time"
+              pointer: true
