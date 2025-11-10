@@ -9,6 +9,9 @@ import (
 )
 
 type Querier interface {
+	CheckIfEmailIsRegistered(ctx context.Context, email string) (bool, error)
+	CheckIfPhoneIsRegistered(ctx context.Context, phoneNumber string) (bool, error)
+	CheckIfSocialNetworkIsRegistered(ctx context.Context, socialNetworkLink string) (bool, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
 	GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error)

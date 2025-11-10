@@ -10,6 +10,45 @@ import (
 	"time"
 )
 
+const checkIfEmailIsRegistered = `-- name: CheckIfEmailIsRegistered :one
+SELECT EXISTS (
+    SELECT 1 FROM users WHERE email = $1 AND is_deleted = FALSE
+) AS email_exists
+`
+
+func (q *Queries) CheckIfEmailIsRegistered(ctx context.Context, email string) (bool, error) {
+	row := q.db.QueryRow(ctx, checkIfEmailIsRegistered, email)
+	var email_exists bool
+	err := row.Scan(&email_exists)
+	return email_exists, err
+}
+
+const checkIfPhoneIsRegistered = `-- name: CheckIfPhoneIsRegistered :one
+SELECT EXISTS (
+    SELECT 1 FROM users WHERE phone_number = $1 AND is_deleted = FALSE
+) AS phone_exists
+`
+
+func (q *Queries) CheckIfPhoneIsRegistered(ctx context.Context, phoneNumber string) (bool, error) {
+	row := q.db.QueryRow(ctx, checkIfPhoneIsRegistered, phoneNumber)
+	var phone_exists bool
+	err := row.Scan(&phone_exists)
+	return phone_exists, err
+}
+
+const checkIfSocialNetworkIsRegistered = `-- name: CheckIfSocialNetworkIsRegistered :one
+SELECT EXISTS (
+    SELECT 1 FROM users WHERE social_network_link = $1 AND is_deleted = FALSE
+) AS network_exists
+`
+
+func (q *Queries) CheckIfSocialNetworkIsRegistered(ctx context.Context, socialNetworkLink string) (bool, error) {
+	row := q.db.QueryRow(ctx, checkIfSocialNetworkIsRegistered, socialNetworkLink)
+	var network_exists bool
+	err := row.Scan(&network_exists)
+	return network_exists, err
+}
+
 const createUser = `-- name: CreateUser :one
 WITH user_info AS (
     INSERT INTO users

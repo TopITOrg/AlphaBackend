@@ -9,8 +9,10 @@ import (
 	"sport_platform/internal/mapper"
 	"sport_platform/internal/service_wrapper"
 	"sport_platform/internal/sqlc/db_queries"
+	"sport_platform/internal/validations"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 func CreateUserHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
@@ -18,6 +20,32 @@ func CreateUserHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 	if err := ctx.ShouldBind(&request); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": fmt.Sprintf("can't parse query as error happend: %s", err),
+		})
+		return
+	}
+
+	validate := validator.New()
+
+	if err := validate.Struct(request); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invald registration data",
+		})
+		return
+	}
+
+	isDataValid, validationError := validations.ValidateUserData(ctx, wrapper, request.Email, request.PhoneNumber, request.SocialNetworkLink)
+
+	if validationError != nil {
+		fmt.Println(validationError)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Unknown error",
+		})
+		return
+	}
+
+	if !isDataValid {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "User with entered data already exists",
 		})
 		return
 	}
