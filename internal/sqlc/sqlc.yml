@@ -19,7 +19,7 @@ sql:
             nullable: true
             go_type:
               type: "*time.Time"
-              pointer: true
+              pointer: false
           - db_type: "timestamptz"
             go_type:
               type: "time.Time"
