@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"sport_platform/application/models/claims"
 	"sport_platform/application/models/delete_user"
+	"sport_platform/application/models/shared"
 	"sport_platform/internal/middleware"
 	"sport_platform/internal/service_wrapper"
 
@@ -32,7 +33,7 @@ func DeleteUserHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 	}
 	userClaims := claimsRaw.(claims.UserClaims)
 
-	if userClaims.Email != request.Email && userClaims.Role != "Admin" {
+	if userClaims.Email != request.Email && userClaims.Role != string(shared.Admin) {
 		ctx.JSON(
 			http.StatusForbidden,
 			gin.H{
