@@ -34,7 +34,7 @@ func DeleteUserHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 	switch {
 	case errors.Is(dbError, pgx.ErrNoRows):
 		ctx.JSON(
-			http.StatusUnauthorized,
+			http.StatusNotFound,
 			gin.H{
 				"message": "Email or password does not match",
 			},
@@ -46,6 +46,16 @@ func DeleteUserHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 			http.StatusInternalServerError,
 			gin.H{
 				"message": "Something unusual happened",
+			},
+		)
+		return
+	}
+
+	if user.Email != request.Email && user.Role != "Admin" {
+		ctx.JSON(
+			http.StatusForbidden,
+			gin.H{
+				"message": "No permission",
 			},
 		)
 		return
