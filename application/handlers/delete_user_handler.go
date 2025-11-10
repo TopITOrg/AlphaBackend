@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sport_platform/application/models/claims"
 	"sport_platform/application/models/delete_user"
 	"sport_platform/internal/middleware"
 	"sport_platform/internal/service_wrapper"
@@ -19,12 +20,23 @@ func DeleteUserHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 		return
 	}
 
-	_, exists := ctx.Get(middleware.ClaimsKey)
+	claimsRaw, exists := ctx.Get(middleware.ClaimsKey)
 	if !exists {
 		ctx.JSON(
 			http.StatusUnauthorized,
 			gin.H{
 				"message": "Unauthorized",
+			},
+		)
+		return
+	}
+	userClaims := claimsRaw.(claims.UserClaims)
+
+	if userClaims.Email != request.Email && userClaims.Role != "Admin" {
+		ctx.JSON(
+			http.StatusForbidden,
+			gin.H{
+				"message": "No permission",
 			},
 		)
 		return
@@ -46,16 +58,6 @@ func DeleteUserHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 			http.StatusInternalServerError,
 			gin.H{
 				"message": "Something unusual happened",
-			},
-		)
-		return
-	}
-
-	if user.Email != request.Email && user.Role != "Admin" {
-		ctx.JSON(
-			http.StatusForbidden,
-			gin.H{
-				"message": "No permission",
 			},
 		)
 		return
