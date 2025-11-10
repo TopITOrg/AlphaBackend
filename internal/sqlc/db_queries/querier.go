@@ -9,9 +9,12 @@ import (
 )
 
 type Querier interface {
+	CheckWorkoutExists(ctx context.Context, id int64) (bool, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
 	GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error)
+	GetWorkoutsByClub(ctx context.Context, clubID int64) ([]GetWorkoutsByClubRow, error)
+	SoftDeleteWorkout(ctx context.Context, id int64) error
 }
 
 var _ Querier = (*Queries)(nil)
