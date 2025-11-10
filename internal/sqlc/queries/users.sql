@@ -58,3 +58,27 @@ SELECT
 FROM user_info
 LEFT JOIN groups ON groups.id = user_info.group_id AND groups.is_deleted = false
 LEFT JOIN group_types ON groups.group_type_id = group_types.id AND group_types.is_deleted = false;
+
+-- name: UpdateUser :one
+UPDATE users
+SET
+    full_name = COALESCE(sqlc.narg(full_name), full_name),
+    social_network_link = COALESCE(sqlc.narg(social_network_link), social_network_link),
+    phone_number = COALESCE(sqlc.narg(phone_number), phone_number),
+    email = COALESCE(sqlc.narg(email), email),
+    password = COALESCE(sqlc.arg(password), password),
+    updated_at = NOW()
+WHERE users.id = @id
+RETURNING
+    users.*,
+    COALESCE((
+        SELECT
+            groups.prefix || '-' ||
+            (extract(YEAR FROM age(now(), (groups.enrollment_year::text || '-09-01 00:00:00')::timestamptz)) + 1)::text ||
+            lpad(groups.group_number::text, 2, '0') ||
+            group_types.name || '-' ||
+            substring(groups.enrollment_year::text FROM 3 FOR 2)
+        FROM groups
+        LEFT JOIN group_types ON groups.group_type_id = group_types.id
+        WHERE groups.id = users.group_id
+ ), '')::text as group_name;
