@@ -6,8 +6,10 @@ import (
 	"sport_platform/application/models/claims"
 	"sport_platform/application/models/shared"
 	"sport_platform/application/models/update_workout"
+	"sport_platform/internal/mapper"
 	"sport_platform/internal/middleware"
 	"sport_platform/internal/service_wrapper"
+	"sport_platform/internal/sqlc/db_queries"
 
 	"github.com/gin-gonic/gin"
 )
@@ -44,8 +46,46 @@ func UpdateWorkoutHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 		return
 	}
 
+	var updateParams db_queries.UpdateWorkoutParams
+
+	paramsMappingError := mapper.Mapper{}.Map(
+		&updateParams,
+		request,
+	)
+
+	if paramsMappingError != nil {
+		fmt.Println(paramsMappingError)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+		return
+	}
+
+	updatedWorkout, err := wrapper.Db.Queries.UpdateWorkout(ctx, updateParams)
+
+	if err != nil {
+		fmt.Println(err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Unknown error",
+		})
+		return
+	}
+
+	var response update_workout.UpdateWorkoutResponse
+
+	responseMappingError := mapper.Mapper{}.Map(
+		&response,
+		updatedWorkout,
+	)
+
+	if responseMappingError != nil {
+		fmt.Println(responseMappingError)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Unknown error",
+		})
+		return
+	}
+
 	ctx.JSON(
 		http.StatusOK,
-		request,
+		response,
 	)
 }

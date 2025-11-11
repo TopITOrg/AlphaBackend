@@ -13,6 +13,7 @@ type Querier interface {
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
 	GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error)
+	UpdateWorkout(ctx context.Context, arg UpdateWorkoutParams) (Workout, error)
 }
 
 var _ Querier = (*Queries)(nil)

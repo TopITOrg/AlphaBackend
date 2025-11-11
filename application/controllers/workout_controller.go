@@ -9,7 +9,7 @@ import (
 
 func WorkoutController(engine *gin.Engine, wrapper *service_wrapper.Wrapper) {
 	routerGroup := engine.Group("/workouts")
-	routerGroup.POST("/create", func(context *gin.Context) {
-		handlers.CreateWorkoutHandler(context, wrapper)
+	routerGroup.PUT("/update", func(context *gin.Context) {
+		handlers.UpdateWorkoutHandler(context, wrapper)
 	})
 }
