@@ -8,7 +8,16 @@ INSERT INTO clubs (
     place,
     education_level_id,
     required_workout_per_week
-) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+) VALUES (
+             sqlc.arg(name),
+             sqlc.arg(description),
+             sqlc.arg(sport_type_id),
+             sqlc.arg(teacher_id),
+             sqlc.arg(total_places),
+             sqlc.arg(place),
+             (SELECT id FROM education_levels WHERE education_levels.name = sqlc.arg(education_level_name)),
+             sqlc.arg(required_workout_per_week)
+         )
     RETURNING *;
 
 -- name: GetClubByID :one
@@ -45,8 +54,8 @@ SELECT EXISTS(
     WHERE id = $1
 );
 
--- name: CheckEducationLevelExists :one
+-- name: CheckEducationLevelExistsByName :one
 SELECT EXISTS(
     SELECT 1 FROM education_levels
-    WHERE id = $1
+    WHERE name = $1
 );

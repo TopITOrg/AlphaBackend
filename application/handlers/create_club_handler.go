@@ -71,7 +71,7 @@ func CreateClubHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 		return
 	}
 
-	existsEducation, err := wrapper.Db.Queries.CheckEducationLevelExists(ctx, request.EducationLevelID)
+	existsEducation, err := wrapper.Db.Queries.CheckEducationLevelExistsByName(ctx, request.EducationLevelName)
 	if err != nil {
 		fmt.Println(err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Database error checking education level"})

@@ -40,15 +40,15 @@ func (q *Queries) CheckClubOwnership(ctx context.Context, arg CheckClubOwnership
 	return count, err
 }
 
-const checkEducationLevelExists = `-- name: CheckEducationLevelExists :one
+const checkEducationLevelExistsByName = `-- name: CheckEducationLevelExistsByName :one
 SELECT EXISTS(
     SELECT 1 FROM education_levels
-    WHERE id = $1
+    WHERE name = $1
 )
 `
 
-func (q *Queries) CheckEducationLevelExists(ctx context.Context, id int64) (bool, error) {
-	row := q.db.QueryRow(ctx, checkEducationLevelExists, id)
+func (q *Queries) CheckEducationLevelExistsByName(ctx context.Context, name string) (bool, error) {
+	row := q.db.QueryRow(ctx, checkEducationLevelExistsByName, name)
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err
@@ -78,7 +78,16 @@ INSERT INTO clubs (
     place,
     education_level_id,
     required_workout_per_week
-) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+) VALUES (
+             $1,
+             $2,
+             $3,
+             $4,
+             $5,
+             $6,
+             (SELECT id FROM education_levels WHERE education_levels.name = $7),
+             $8
+         )
     RETURNING id, name, description, sport_type_id, teacher_id, total_places, place, education_level_id, required_workout_per_week, created_at, updated_at, is_deleted
 `
 
@@ -89,7 +98,7 @@ type CreateClubParams struct {
 	TeacherID              int64
 	TotalPlaces            *int32
 	Place                  string
-	EducationLevelID       int64
+	EducationLevelName     string
 	RequiredWorkoutPerWeek int32
 }
 
@@ -101,7 +110,7 @@ func (q *Queries) CreateClub(ctx context.Context, arg CreateClubParams) (Club, e
 		arg.TeacherID,
 		arg.TotalPlaces,
 		arg.Place,
-		arg.EducationLevelID,
+		arg.EducationLevelName,
 		arg.RequiredWorkoutPerWeek,
 	)
 	var i Club
