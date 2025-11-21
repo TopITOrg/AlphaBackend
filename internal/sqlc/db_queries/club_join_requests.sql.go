@@ -7,113 +7,66 @@ package db_queries
 
 import (
 	"context"
-	"time"
 )
 
 const createJoinRequest = `-- name: CreateJoinRequest :one
 INSERT INTO club_join_requests 
-(club_id, user_id, status, created_at, updated_at)
+(club_id, user_id, status)
 VALUES 
-($1, $2, $3, $4, $5)
+($1, $2, $3)
 RETURNING id, club_id, user_id, status, created_at, updated_at, is_deleted
 `
 
 type CreateJoinRequestParams struct {
-	ClubID    int64
-	UserID    int64
-	Status    string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ClubID int64
+	UserID int64
+	Status string
 }
 
 func (q *Queries) CreateJoinRequest(ctx context.Context, arg CreateJoinRequestParams) (ClubJoinRequest, error) {
-	row := q.db.QueryRow(ctx, createJoinRequest,
+	row := q.db.QueryRow(ctx, createJoinRequest, arg.ClubID, arg.UserID, arg.Status)
+	var i ClubJoinRequest
+	err := row.Scan(
+		&i.ID,
+		&i.ClubID,
+		&i.UserID,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsDeleted,
+	)
+	return i, err
+}
+
+const getJoinRequests = `-- name: GetJoinRequests :many
+SELECT id, club_id, user_id, status, created_at, updated_at, is_deleted
+FROM club_join_requests
+WHERE 
+    ($1::bigint IS NULL OR id = $1::bigint)
+    AND ($2::bigint IS NULL OR club_id = $2::bigint)
+    AND ($3::bigint IS NULL OR user_id = $3::bigint)
+    AND (is_deleted = false)
+ORDER BY id
+LIMIT CASE WHEN $5::bigint IS NOT NULL THEN $5::bigint END
+OFFSET CASE WHEN $4::bigint IS NOT NULL THEN $4::bigint ELSE 0 END
+`
+
+type GetJoinRequestsParams struct {
+	ID     *int64
+	ClubID *int64
+	UserID *int64
+	Offset *int64
+	Limit  *int64
+}
+
+func (q *Queries) GetJoinRequests(ctx context.Context, arg GetJoinRequestsParams) ([]ClubJoinRequest, error) {
+	rows, err := q.db.Query(ctx, getJoinRequests,
+		arg.ID,
 		arg.ClubID,
 		arg.UserID,
-		arg.Status,
-		arg.CreatedAt,
-		arg.UpdatedAt,
+		arg.Offset,
+		arg.Limit,
 	)
-	var i ClubJoinRequest
-	err := row.Scan(
-		&i.ID,
-		&i.ClubID,
-		&i.UserID,
-		&i.Status,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.IsDeleted,
-	)
-	return i, err
-}
-
-const getAllJoinRequests = `-- name: GetAllJoinRequests :many
-SELECT id, club_id, user_id, status, created_at, updated_at, is_deleted
-FROM club_join_requests
-`
-
-func (q *Queries) GetAllJoinRequests(ctx context.Context) ([]ClubJoinRequest, error) {
-	rows, err := q.db.Query(ctx, getAllJoinRequests)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ClubJoinRequest{}
-	for rows.Next() {
-		var i ClubJoinRequest
-		if err := rows.Scan(
-			&i.ID,
-			&i.ClubID,
-			&i.UserID,
-			&i.Status,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.IsDeleted,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getJoinRequestById = `-- name: GetJoinRequestById :one
-SELECT id, club_id, user_id, status, created_at, updated_at, is_deleted
-FROM club_join_requests
-WHERE
-    id = $1 and
-    is_deleted = false
-LIMIT 1
-`
-
-func (q *Queries) GetJoinRequestById(ctx context.Context, id int64) (ClubJoinRequest, error) {
-	row := q.db.QueryRow(ctx, getJoinRequestById, id)
-	var i ClubJoinRequest
-	err := row.Scan(
-		&i.ID,
-		&i.ClubID,
-		&i.UserID,
-		&i.Status,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.IsDeleted,
-	)
-	return i, err
-}
-
-const getJoinRequestsByClub = `-- name: GetJoinRequestsByClub :many
-SELECT id, club_id, user_id, status, created_at, updated_at, is_deleted
-FROM club_join_requests
-WHERE
-    club_id = $1 and
-    is_deleted = false
-`
-
-func (q *Queries) GetJoinRequestsByClub(ctx context.Context, clubID int64) ([]ClubJoinRequest, error) {
-	rows, err := q.db.Query(ctx, getJoinRequestsByClub, clubID)
 	if err != nil {
 		return nil, err
 	}

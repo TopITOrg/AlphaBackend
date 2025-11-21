@@ -6,6 +6,7 @@ import (
 	"sport_platform/application/models/create_join_request"
 	"sport_platform/application/models/shared"
 	"sport_platform/internal/mapper"
+	"sport_platform/internal/middleware"
 	"sport_platform/internal/service_wrapper"
 	"sport_platform/internal/sqlc/db_queries"
 
@@ -13,10 +14,21 @@ import (
 )
 
 func CreateJoinRequestHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
+	_, exists := ctx.Get(middleware.ClaimsKey)
+	if !exists {
+		ctx.JSON(
+			http.StatusUnauthorized,
+			gin.H{
+				"message": "Unauthorized",
+			},
+		)
+		return
+	}
 	var request create_join_request.CreateJoinRequestRequest
 	if err := ctx.ShouldBind(&request); err != nil {
+		fmt.Printf("GetJoinRequestsHandler: ShouldBind error: %s\n", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": fmt.Sprintf("can't parse query as error happend: %s", err),
+			"message": "Unknown error",
 		})
 		return
 	}

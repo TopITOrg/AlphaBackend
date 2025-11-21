@@ -12,13 +12,7 @@ func JoinRequestController(engine *gin.Engine, wrapper *service_wrapper.Wrapper)
 	routerGroup.POST("/create", func(context *gin.Context) {
 		handlers.CreateJoinRequestHandler(context, wrapper)
 	})
-	routerGroup.GET("/club/:club_id", func(context *gin.Context) {
-		handlers.GetJoinRequestsByClubHandler(context, wrapper)
-	})
 	routerGroup.GET("/", func(context *gin.Context) {
-		handlers.GetAllJoinRequestsHandler(context, wrapper)
-	})
-	routerGroup.GET("/:id", func(context *gin.Context) {
-		handlers.GetJoinRequestsByIdHandler(context, wrapper)
+		handlers.GetJoinRequestsHandler(context, wrapper)
 	})
 }
