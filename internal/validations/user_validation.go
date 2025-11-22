@@ -31,11 +31,7 @@ func validateEmail(ctx *gin.Context, wrapper *service_wrapper.Wrapper, email str
 		return false, err
 	}
 
-	if emailExists {
-		return false, nil
-	}
-
-	return true, nil
+	return !emailExists, nil
 }
 
 func validatePhoneNumber(ctx *gin.Context, wrapper *service_wrapper.Wrapper, phoneNumber string) (bool, error) {
@@ -44,11 +40,7 @@ func validatePhoneNumber(ctx *gin.Context, wrapper *service_wrapper.Wrapper, pho
 		return false, err
 	}
 
-	if phoneNumberExists {
-		return false, nil
-	}
-
-	return true, nil
+	return !phoneNumberExists, nil
 }
 
 func validateSocialNetwork(ctx *gin.Context, wrapper *service_wrapper.Wrapper, socialNetworkLink string) (bool, error) {
@@ -57,9 +49,5 @@ func validateSocialNetwork(ctx *gin.Context, wrapper *service_wrapper.Wrapper, s
 		return false, err
 	}
 
-	if socialNetworkExists {
-		return false, nil
-	}
-
-	return true, nil
+	return !socialNetworkExists, nil
 }
