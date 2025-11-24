@@ -9,10 +9,17 @@ import (
 )
 
 type Querier interface {
+	CheckIfEmailIsRegistered(ctx context.Context, email string) (bool, error)
+	CheckIfPhoneIsRegistered(ctx context.Context, phoneNumber string) (bool, error)
+	CheckIfSocialNetworkIsRegistered(ctx context.Context, socialNetworkLink string) (bool, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	DeleteUser(ctx context.Context, email string) error
+	CreateWorkout(ctx context.Context, arg CreateWorkoutParams) (Workout, error)
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
 	GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error)
+	UpdateClubJoinRequestStatus(ctx context.Context, arg UpdateClubJoinRequestStatusParams) (ClubJoinRequest, error)
+	UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error)
+	UpdateWorkout(ctx context.Context, arg UpdateWorkoutParams) (Workout, error)
 }
 
 var _ Querier = (*Queries)(nil)
