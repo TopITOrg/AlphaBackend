@@ -1,4 +1,15 @@
 services:
+  app:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    env_file:
+      - env/app.env
+    ports:
+      - "8080:8080"
+    networks:
+      - shared
+
   postgres:
     container_name: postgres-sport
     image: postgres:17.5-alpine

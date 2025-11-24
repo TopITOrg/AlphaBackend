@@ -235,3 +235,81 @@ func (q *Queries) GetUserById(ctx context.Context, id int64) (GetUserByIdRow, er
 	)
 	return i, err
 }
+
+const updateUser = `-- name: UpdateUser :one
+UPDATE users
+SET
+    full_name = COALESCE($1, full_name),
+    social_network_link = COALESCE($2, social_network_link),
+    phone_number = COALESCE($3, phone_number),
+    email = COALESCE($4, email),
+    password = COALESCE($5, password),
+    updated_at = NOW()
+WHERE users.id = $6
+RETURNING
+    users.id, users.full_name, users.social_network_link, users.phone_number, users.email, users.birth_date, users.role, users.password, users.group_id, users.created_at, users.updated_at, users.is_deleted,
+    COALESCE((
+        SELECT
+            groups.prefix || '-' ||
+            (extract(YEAR FROM age(now(), (groups.enrollment_year::text || '-09-01 00:00:00')::timestamptz)) + 1)::text ||
+            lpad(groups.group_number::text, 2, '0') ||
+            group_types.name || '-' ||
+            substring(groups.enrollment_year::text FROM 3 FOR 2)
+        FROM groups
+        LEFT JOIN group_types ON groups.group_type_id = group_types.id
+        WHERE groups.id = users.group_id
+ ), '')::text as group_name
+`
+
+type UpdateUserParams struct {
+	FullName          *string
+	SocialNetworkLink *string
+	PhoneNumber       *string
+	Email             *string
+	Password          []byte
+	ID                int64
+}
+
+type UpdateUserRow struct {
+	ID                int64
+	FullName          string
+	SocialNetworkLink string
+	PhoneNumber       string
+	Email             string
+	BirthDate         time.Time
+	Role              string
+	Password          []byte
+	GroupID           *int64
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	IsDeleted         bool
+	GroupName         string
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error) {
+	row := q.db.QueryRow(ctx, updateUser,
+		arg.FullName,
+		arg.SocialNetworkLink,
+		arg.PhoneNumber,
+		arg.Email,
+		arg.Password,
+		arg.ID,
+	)
+	var i UpdateUserRow
+	err := row.Scan(
+		&i.ID,
+		&i.FullName,
+		&i.SocialNetworkLink,
+		&i.PhoneNumber,
+		&i.Email,
+		&i.BirthDate,
+		&i.Role,
+		&i.Password,
+		&i.GroupID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsDeleted,
+		&i.GroupName,
+	)
+	return i, err
+}
