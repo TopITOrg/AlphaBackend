@@ -14,6 +14,7 @@ type Querier interface {
 	GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error)
 	UpdateClubJoinRequestStatus(ctx context.Context, arg UpdateClubJoinRequestStatusParams) (ClubJoinRequest, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error)
+	UpdateWorkout(ctx context.Context, arg UpdateWorkoutParams) (Workout, error)
 }
 
 var _ Querier = (*Queries)(nil)
