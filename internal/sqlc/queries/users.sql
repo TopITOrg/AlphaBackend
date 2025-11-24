@@ -59,6 +59,21 @@ FROM user_info
 LEFT JOIN groups ON groups.id = user_info.group_id AND groups.is_deleted = false
 LEFT JOIN group_types ON groups.group_type_id = group_types.id AND group_types.is_deleted = false;
 
+-- name: CheckIfEmailIsRegistered :one
+SELECT EXISTS (
+    SELECT 1 FROM users WHERE email = @email AND is_deleted = FALSE
+) AS email_exists;
+
+-- name: CheckIfSocialNetworkIsRegistered :one
+SELECT EXISTS (
+    SELECT 1 FROM users WHERE social_network_link = @social_network_link AND is_deleted = FALSE
+) AS network_exists;
+
+-- name: CheckIfPhoneIsRegistered :one
+SELECT EXISTS (
+    SELECT 1 FROM users WHERE phone_number = @phone_number AND is_deleted = FALSE
+) AS phone_exists;
+
 -- name: UpdateUser :one
 UPDATE users
 SET
