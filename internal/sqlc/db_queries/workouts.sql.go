@@ -10,6 +10,22 @@ import (
 	"time"
 )
 
+const createWorkout = `-- name: CreateWorkout :one
+INSERT INTO workouts
+(club_id, start_date, end_date)
+VALUES
+($1, $2, $3)
+RETURNING workouts.id, workouts.club_id, workouts.start_date, workouts.end_date, workouts.cancelled, workouts.created_at, workouts.updated_at, workouts.is_deleted
+`
+
+type CreateWorkoutParams struct {
+	ClubID    int64
+	StartDate time.Time
+	EndDate   time.Time
+}
+
+func (q *Queries) CreateWorkout(ctx context.Context, arg CreateWorkoutParams) (Workout, error) {
+	row := q.db.QueryRow(ctx, createWorkout, arg.ClubID, arg.StartDate, arg.EndDate)
 const updateWorkout = `-- name: UpdateWorkout :one
 UPDATE workouts
 SET
