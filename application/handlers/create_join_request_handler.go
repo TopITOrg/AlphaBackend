@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"sport_platform/application/models/claims"
 	"sport_platform/application/models/create_join_request"
 	"sport_platform/application/models/shared"
 	"sport_platform/internal/mapper"
@@ -14,12 +15,24 @@ import (
 )
 
 func CreateJoinRequestHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
-	_, exists := ctx.Get(middleware.ClaimsKey)
+	claimsRaw, exists := ctx.Get(middleware.ClaimsKey)
 	if !exists {
 		ctx.JSON(
 			http.StatusUnauthorized,
 			gin.H{
 				"message": "Unauthorized",
+			},
+		)
+		return
+	}
+	userClaims := claimsRaw.(claims.UserClaims)
+	user, dbError := wrapper.Db.Queries.GetUserById(ctx, userClaims.ID)
+	if dbError != nil {
+		fmt.Printf("Error while getting user: %s\n", dbError)
+		ctx.JSON(
+			http.StatusInternalServerError,
+			gin.H{
+				"message": "Something unusual happened",
 			},
 		)
 		return
@@ -39,8 +52,10 @@ func CreateJoinRequestHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper
 		&createParams,
 		request,
 		struct {
+			UserID int64
 			Status string
 		}{
+			UserID: user.ID,
 			Status: shared.NotAccepted,
 		},
 	)
