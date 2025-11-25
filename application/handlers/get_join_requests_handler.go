@@ -24,15 +24,14 @@ func GetJoinRequestsHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) 
 		return
 	}
 	var request get_join_request.GetJoinRequestRequest
-	if ctx.Request.ContentLength > 0 {
-		if err := ctx.ShouldBindJSON(&request); err != nil {
-			fmt.Printf("GetJoinRequestsHandler: ShouldBind error: %s\n", err)
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"message": "Unknown error",
-			})
-			return
-		}
+	if err := ctx.ShouldBindQuery(&request); err != nil {
+		fmt.Printf("GetJoinRequestsHandler: ShouldBind error: %s\n", err)
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "Unknown error",
+		})
+		return
 	}
+	fmt.Println(request)
 
 	var getParams db_queries.GetJoinRequestsParams
 
