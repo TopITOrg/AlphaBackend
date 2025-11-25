@@ -39,24 +39,30 @@ func (q *Queries) CreateJoinRequest(ctx context.Context, arg CreateJoinRequestPa
 }
 
 const getJoinRequests = `-- name: GetJoinRequests :many
-SELECT id, club_id, user_id, status, created_at, updated_at, is_deleted
-FROM club_join_requests
+SELECT cjr.id, cjr.club_id, cjr.user_id, cjr.status, cjr.created_at, cjr.updated_at, cjr.is_deleted
+FROM club_join_requests cjr
+INNER JOIN clubs c ON cjr.club_id = c.id
 WHERE 
-    ($1::bigint IS NULL OR id = $1::bigint)
-    AND ($2::bigint IS NULL OR club_id = $2::bigint)
-    AND ($3::bigint IS NULL OR user_id = $3::bigint)
-    AND (is_deleted = false)
-ORDER BY id
-LIMIT CASE WHEN $5::bigint IS NOT NULL THEN $5::bigint END
-OFFSET CASE WHEN $4::bigint IS NOT NULL THEN $4::bigint ELSE 0 END
+    ($1::bigint IS NULL OR cjr.id = $1::bigint)
+    AND ($2::bigint IS NULL OR cjr.club_id = $2::bigint)
+    AND ($3::bigint IS NULL OR cjr.user_id = $3::bigint)
+    AND cjr.is_deleted = false
+    AND (
+        cjr.user_id = $4::bigint 
+        OR c.teacher_id = $4::bigint
+    )
+ORDER BY cjr.created_at DESC
+LIMIT $6::bigint
+OFFSET $5::bigint
 `
 
 type GetJoinRequestsParams struct {
-	ID     *int64
-	ClubID *int64
-	UserID *int64
-	Offset *int64
-	Limit  *int64
+	ID            *int64
+	ClubID        *int64
+	UserID        *int64
+	CurrentUserID int64
+	Offset        *int64
+	Limit         *int64
 }
 
 func (q *Queries) GetJoinRequests(ctx context.Context, arg GetJoinRequestsParams) ([]ClubJoinRequest, error) {
@@ -64,6 +70,7 @@ func (q *Queries) GetJoinRequests(ctx context.Context, arg GetJoinRequestsParams
 		arg.ID,
 		arg.ClubID,
 		arg.UserID,
+		arg.CurrentUserID,
 		arg.Offset,
 		arg.Limit,
 	)
