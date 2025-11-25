@@ -77,23 +77,31 @@ func GetJoinRequestsHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) 
 	}
 
 	var response get_join_request.GetJoinRequestsResponse
-	response.JoinRequests = make([]get_join_request.JoinRequest, 0, len(joinRequests))
+	response.JoinRequests = make([]get_join_request.JoinRequest, len(joinRequests))
 
-	for _, joinRequest := range joinRequests {
-		var joinRequestResponse get_join_request.JoinRequest
-		mappingError := mapper.Mapper{}.Map(&joinRequestResponse, joinRequest)
-		if mappingError != nil {
-			fmt.Printf("GetAllJoinRequestsHandler: mapping error: %s\n", mappingError)
-			ctx.JSON(
-				http.StatusInternalServerError,
-				gin.H{
-					"message": "Unknown error",
-				},
-			)
-			return
-		}
-		response.JoinRequests = append(response.JoinRequests, joinRequestResponse)
+	type SourceWrapper struct {
+		Items []db_queries.ClubJoinRequest
 	}
+
+	type DestWrapper struct {
+		Items []get_join_request.JoinRequest
+	}
+
+	sourceWrapper := SourceWrapper{Items: joinRequests}
+	destWrapper := DestWrapper{Items: response.JoinRequests}
+
+	mappingError := mapper.Mapper{}.Map(&destWrapper, sourceWrapper)
+	if mappingError != nil {
+		fmt.Printf("GetAllJoinRequestsHandler: mapping error: %s\n", mappingError)
+		ctx.JSON(
+			http.StatusInternalServerError,
+			gin.H{
+				"message": "Unknown error",
+			},
+		)
+		return
+	}
+	response.JoinRequests = destWrapper.Items
 
 	ctx.JSON(
 		http.StatusOK,
