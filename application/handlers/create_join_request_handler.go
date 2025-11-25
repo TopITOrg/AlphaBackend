@@ -52,7 +52,7 @@ func CreateJoinRequestHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper
 		})
 		return
 	}
-	join_request, err := wrapper.Db.Queries.CreateJoinRequest(ctx, createParams)
+	joinRequest, err := wrapper.Db.Queries.CreateJoinRequest(ctx, createParams)
 
 	if err != nil {
 		fmt.Println(err)
@@ -66,7 +66,7 @@ func CreateJoinRequestHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper
 
 	responseMappingError := mapper.Mapper{}.Map(
 		&response,
-		join_request,
+		joinRequest,
 	)
 	if responseMappingError != nil {
 		fmt.Println(responseMappingError)
