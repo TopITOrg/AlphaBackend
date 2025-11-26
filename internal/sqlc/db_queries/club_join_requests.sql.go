@@ -25,6 +25,22 @@ type CreateJoinRequestParams struct {
 
 func (q *Queries) CreateJoinRequest(ctx context.Context, arg CreateJoinRequestParams) (ClubJoinRequest, error) {
 	row := q.db.QueryRow(ctx, createJoinRequest, arg.ClubID, arg.UserID, arg.Status)
+const updateClubJoinRequestStatus = `-- name: UpdateClubJoinRequestStatus :one
+UPDATE club_join_requests
+SET
+    status = $1,
+    updated_at = now()
+WHERE id = $2 and is_deleted = FALSE
+RETURNING club_join_requests.id, club_join_requests.club_id, club_join_requests.user_id, club_join_requests.status, club_join_requests.created_at, club_join_requests.updated_at, club_join_requests.is_deleted
+`
+
+type UpdateClubJoinRequestStatusParams struct {
+	Status string
+	ID     int64
+}
+
+func (q *Queries) UpdateClubJoinRequestStatus(ctx context.Context, arg UpdateClubJoinRequestStatusParams) (ClubJoinRequest, error) {
+	row := q.db.QueryRow(ctx, updateClubJoinRequestStatus, arg.Status, arg.ID)
 	var i ClubJoinRequest
 	err := row.Scan(
 		&i.ID,
