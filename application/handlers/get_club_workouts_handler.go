@@ -26,9 +26,7 @@ func GetClubWorkoutsHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) 
 		return
 	}
 
-	var existsClub bool
-	var err error
-	existsClub, err = wrapper.Db.Queries.CheckClubExists(ctx, request.ClubID)
+	existsClub, err := wrapper.Db.Queries.CheckClubExists(ctx, request.ClubID)
 	if err != nil {
 		fmt.Println(err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Database error while checking club existence"})
