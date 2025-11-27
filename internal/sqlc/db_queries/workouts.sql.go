@@ -26,6 +26,20 @@ type CreateWorkoutParams struct {
 
 func (q *Queries) CreateWorkout(ctx context.Context, arg CreateWorkoutParams) (Workout, error) {
 	row := q.db.QueryRow(ctx, createWorkout, arg.ClubID, arg.StartDate, arg.EndDate)
+	var i Workout
+	err := row.Scan(
+		&i.ID,
+		&i.ClubID,
+		&i.StartDate,
+		&i.EndDate,
+		&i.Cancelled,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsDeleted,
+	)
+	return i, err
+}
+
 const updateWorkout = `-- name: UpdateWorkout :one
 UPDATE workouts
 SET

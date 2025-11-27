@@ -154,7 +154,17 @@ SELECT
     users.password,
     users.created_at,
     users.updated_at,
-    (groups.prefix || '-' || extract(YEAR FROM age(now(), (groups.enrollment_year::text || '-09-01 00:00:00')::timestamptz)) + 1 || lpad(groups.group_number::text, 2, '0') || group_types.name || '-' || substring(enrollment_year::text FROM 3 FOR 2))::text as group_name
+    COALESCE((
+        SELECT
+            groups.prefix || '-' ||
+            (extract(YEAR FROM age(now(), (groups.enrollment_year::text || '-09-01 00:00:00')::timestamptz)) + 1)::text ||
+            lpad(groups.group_number::text, 2, '0') ||
+            group_types.name || '-' ||
+            substring(groups.enrollment_year::text FROM 3 FOR 2)
+        FROM groups
+        LEFT JOIN group_types ON groups.group_type_id = group_types.id
+        WHERE groups.id = users.group_id
+    ), '')::text as group_name
 FROM users
 LEFT JOIN groups on users.group_id = groups.id AND groups.is_deleted = false
 LEFT JOIN group_types on groups.group_type_id = group_types.id and group_types.is_deleted = false
@@ -207,7 +217,17 @@ SELECT
     users.password,
     users.created_at,
     users.updated_at,
-    (groups.prefix || '-' || extract(YEAR FROM age(now(), (groups.enrollment_year::text || '-09-01 00:00:00')::timestamptz)) + 1 || lpad(groups.group_number::text, 2, '0') || group_types.name || '-' || substring(enrollment_year::text FROM 3 FOR 2))::text as group_name
+   COALESCE((
+        SELECT
+            groups.prefix || '-' ||
+            (extract(YEAR FROM age(now(), (groups.enrollment_year::text || '-09-01 00:00:00')::timestamptz)) + 1)::text ||
+            lpad(groups.group_number::text, 2, '0') ||
+            group_types.name || '-' ||
+            substring(groups.enrollment_year::text FROM 3 FOR 2)
+        FROM groups
+        LEFT JOIN group_types ON groups.group_type_id = group_types.id
+        WHERE groups.id = users.group_id
+    ), '')::text as group_name
 FROM users
          LEFT JOIN groups on users.group_id = groups.id AND groups.is_deleted = false
          LEFT JOIN group_types on groups.group_type_id = group_types.id and group_types.is_deleted = false
