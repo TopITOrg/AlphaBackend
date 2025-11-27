@@ -48,8 +48,8 @@ WHERE
     AND ($3::bigint IS NULL OR cjr.user_id = $3::bigint)
     AND cjr.is_deleted = false
     AND (
-        cjr.user_id = $4::bigint 
-        OR c.teacher_id = $4::bigint
+        cjr.user_id = $4
+        OR c.teacher_id = $4
     )
 ORDER BY cjr.created_at DESC
 LIMIT $6::bigint
