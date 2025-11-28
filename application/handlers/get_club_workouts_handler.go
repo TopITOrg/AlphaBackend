@@ -20,15 +20,14 @@ type WorkoutsResponseWrapper struct {
 }
 
 func GetClubWorkoutsHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
+	var err error
 	var request get_workouts.GetWorkoutsRequest
 	if err := ctx.ShouldBindUri(&request); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Invalid club ID format in URL"})
 		return
 	}
 
-	var existsClub bool
-	var err error
-	existsClub, err = wrapper.Db.Queries.CheckClubExists(ctx, request.ClubID)
+	existsClub, err := wrapper.Db.Queries.CheckClubExists(ctx, request.ClubID)
 	if err != nil {
 		fmt.Println(err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Database error while checking club existence"})
@@ -40,8 +39,7 @@ func GetClubWorkoutsHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) 
 		return
 	}
 
-	var workoutsDB []db_queries.GetWorkoutsByClubRow
-	workoutsDB, err = wrapper.Db.Queries.GetWorkoutsByClub(ctx, request.ClubID)
+	workoutsDB, err := wrapper.Db.Queries.GetWorkoutsByClub(ctx, request.ClubID)
 	if err != nil {
 		fmt.Println(err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Database error retrieving workouts"})
