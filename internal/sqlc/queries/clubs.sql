@@ -39,9 +39,10 @@ WHERE is_deleted = false
 ORDER BY name;
 
 -- name: CheckClubOwnership :one
-SELECT COUNT(*) FROM clubs
-WHERE id = $1 AND teacher_id = $2 AND is_deleted = false;
-
+SELECT EXISTS(
+    SELECT 1 FROM clubs
+    WHERE id = $1 AND teacher_id = $2 AND is_deleted = false
+);
 -- name: CheckClubExists :one
 SELECT EXISTS(
     SELECT 1 FROM clubs

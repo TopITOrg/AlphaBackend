@@ -24,8 +24,10 @@ func (q *Queries) CheckClubExists(ctx context.Context, id int64) (bool, error) {
 }
 
 const checkClubOwnership = `-- name: CheckClubOwnership :one
-SELECT COUNT(*) FROM clubs
-WHERE id = $1 AND teacher_id = $2 AND is_deleted = false
+SELECT EXISTS(
+    SELECT 1 FROM clubs
+    WHERE id = $1 AND teacher_id = $2 AND is_deleted = false
+)
 `
 
 type CheckClubOwnershipParams struct {
@@ -33,11 +35,11 @@ type CheckClubOwnershipParams struct {
 	TeacherID int64
 }
 
-func (q *Queries) CheckClubOwnership(ctx context.Context, arg CheckClubOwnershipParams) (int64, error) {
+func (q *Queries) CheckClubOwnership(ctx context.Context, arg CheckClubOwnershipParams) (bool, error) {
 	row := q.db.QueryRow(ctx, checkClubOwnership, arg.ID, arg.TeacherID)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
 }
 
 const checkEducationLevelExistsByName = `-- name: CheckEducationLevelExistsByName :one

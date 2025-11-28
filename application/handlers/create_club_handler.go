@@ -14,6 +14,45 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func validateAndProcessRequest(
+	ctx *gin.Context,
+	wrapper *service_wrapper.Wrapper,
+	request *create_club.CreateClubRequest,
+	userClaims claims.UserClaims,
+) (int, string) {
+	if request.TotalPlaces < 0 {
+		return http.StatusBadRequest, "TotalPlaces must be greater than or equal to 0."
+	}
+
+	if request.RequiredWorkoutPerWeek <= 0 {
+		return http.StatusBadRequest, "RequiredWorkoutPerWeek must be greater than 0."
+	}
+
+	existsSport, err := wrapper.Db.Queries.CheckSportTypeExists(ctx, request.SportTypeID)
+	if err != nil {
+		fmt.Println(err)
+		return http.StatusInternalServerError, "Database error checking sport type"
+	}
+	if !existsSport {
+		return http.StatusBadRequest, "Invalid SportTypeID provided"
+	}
+
+	existsEducation, err := wrapper.Db.Queries.CheckEducationLevelExistsByName(ctx, request.EducationLevelName)
+	if err != nil {
+		fmt.Println(err)
+		return http.StatusInternalServerError, "Database error checking education level"
+	}
+	if !existsEducation {
+		return http.StatusBadRequest, "Invalid EducationLevelID provided"
+	}
+
+	if userClaims.Role == shared.Teacher {
+		request.TeacherID = userClaims.ID
+	}
+
+	return 0, ""
+}
+
 func CreateClubHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 	claimsRaw, exists := ctx.Get(middleware.ClaimsKey)
 	if !exists {
@@ -46,43 +85,9 @@ func CreateClubHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 		return
 	}
 
-	if request.TotalPlaces < 0 {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "TotalPlaces must be greater than or equal to 0.",
-		})
+	if status, msg := validateAndProcessRequest(ctx, wrapper, &request, userClaims); status != 0 {
+		ctx.JSON(status, gin.H{"message": msg})
 		return
-	}
-
-	if request.RequiredWorkoutPerWeek <= 0 {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "RequiredWorkoutPerWeek must be greater than 0.",
-		})
-		return
-	}
-
-	existsSport, err := wrapper.Db.Queries.CheckSportTypeExists(ctx, request.SportTypeID)
-	if err != nil {
-		fmt.Println(err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Database error checking sport type"})
-		return
-	}
-	if !existsSport {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Invalid SportTypeID provided"})
-		return
-	}
-
-	existsEducation, err := wrapper.Db.Queries.CheckEducationLevelExistsByName(ctx, request.EducationLevelName)
-	if err != nil {
-		fmt.Println(err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Database error checking education level"})
-		return
-	}
-	if !existsEducation {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Invalid EducationLevelID provided"})
-		return
-	}
-	if userClaims.Role == shared.Teacher {
-		request.TeacherID = userClaims.ID
 	}
 
 	var createParams db_queries.CreateClubParams

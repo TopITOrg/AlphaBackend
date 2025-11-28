@@ -64,8 +64,8 @@ func DeleteClubHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 	}
 
 	if userClaims.Role == shared.Teacher {
-		var count int64
-		count, err = wrapper.Db.Queries.CheckClubOwnership(ctx, db_queries.CheckClubOwnershipParams{
+		var isOwner bool
+		isOwner, err = wrapper.Db.Queries.CheckClubOwnership(ctx, db_queries.CheckClubOwnershipParams{
 			ID:        request.ID,
 			TeacherID: userClaims.ID,
 		})
@@ -80,7 +80,7 @@ func DeleteClubHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 			return
 		}
 
-		if count == 0 {
+		if !isOwner {
 			ctx.JSON(
 				http.StatusForbidden,
 				gin.H{
