@@ -16,23 +16,22 @@ WITH user_info AS (
     (full_name, social_network_link, phone_number, email, birth_date, role, password, group_id)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     RETURNING id, full_name, social_network_link, phone_number, email, birth_date, role, password, group_id, created_at, updated_at, is_deleted
-),
-group_info AS (
-    SELECT 
-        (groups.prefix || '-' || 
-         extract(YEAR FROM age(now(), (groups.enrollment_year::text || '-09-01 00:00:00')::timestamptz)) + 1 || 
-         lpad(groups.group_number::text, 2, '0') || 
-         group_types.name || '-' || 
-         substring(groups.enrollment_year::text FROM 3 FOR 2)
-        )::text as group_name
-    FROM groups
-    LEFT JOIN group_types ON groups.group_type_id = group_types.id AND group_types.is_deleted = false
-    WHERE groups.id = $8 AND groups.is_deleted = false
 )
 SELECT 
     user_info.id, user_info.full_name, user_info.social_network_link, user_info.phone_number, user_info.email, user_info.birth_date, user_info.role, user_info.password, user_info.group_id, user_info.created_at, user_info.updated_at, user_info.is_deleted,
-    group_info.group_name
-FROM user_info, group_info
+    CASE 
+        WHEN groups.id IS NOT NULL THEN
+            (groups.prefix || '-' || 
+             extract(YEAR FROM age(now(), (groups.enrollment_year::text || '-09-01 00:00:00')::timestamptz)) + 1 || 
+             lpad(groups.group_number::text, 2, '0') || 
+             group_types.name || '-' || 
+             substring(groups.enrollment_year::text FROM 3 FOR 2)
+            )::text
+        ELSE ''
+    END as group_name
+FROM user_info
+LEFT JOIN groups ON groups.id = user_info.group_id AND groups.is_deleted = false
+LEFT JOIN group_types ON groups.group_type_id = group_types.id AND group_types.is_deleted = false
 `
 
 type CreateUserParams struct {
