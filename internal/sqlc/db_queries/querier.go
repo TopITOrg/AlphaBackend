@@ -9,6 +9,8 @@ import (
 )
 
 type Querier interface {
+	CreateJoinRequest(ctx context.Context, arg CreateJoinRequestParams) (ClubJoinRequest, error)
+	GetJoinRequests(ctx context.Context, arg GetJoinRequestsParams) ([]ClubJoinRequest, error)
 	CheckIfEmailIsRegistered(ctx context.Context, email string) (bool, error)
 	CheckIfPhoneIsRegistered(ctx context.Context, phoneNumber string) (bool, error)
 	CheckIfSocialNetworkIsRegistered(ctx context.Context, socialNetworkLink string) (bool, error)
