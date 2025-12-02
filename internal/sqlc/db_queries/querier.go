@@ -16,6 +16,8 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	CreateWorkout(ctx context.Context, arg CreateWorkoutParams) (Workout, error)
 	DeleteUser(ctx context.Context, email string) error
+	GetAllClubs(ctx context.Context) ([]GetAllClubsRow, error)
+	GetClubById(ctx context.Context, id int64) (GetClubByIdRow, error)
 	GetJoinRequests(ctx context.Context, arg GetJoinRequestsParams) ([]ClubJoinRequest, error)
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
 	GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error)
