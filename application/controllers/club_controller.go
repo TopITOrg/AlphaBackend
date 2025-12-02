@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GlubController(engine *gin.Engine, wrapper *service_wrapper.Wrapper) {
+func ClubController(engine *gin.Engine, wrapper *service_wrapper.Wrapper) {
 	routerGroup := engine.Group("/clubs")
 	routerGroup.GET("/", func(context *gin.Context) {
 		handlers.GetClubsHandler(context, wrapper)
