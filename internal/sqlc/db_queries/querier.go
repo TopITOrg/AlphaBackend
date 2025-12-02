@@ -9,14 +9,14 @@ import (
 )
 
 type Querier interface {
-	CreateJoinRequest(ctx context.Context, arg CreateJoinRequestParams) (ClubJoinRequest, error)
-	GetJoinRequests(ctx context.Context, arg GetJoinRequestsParams) ([]ClubJoinRequest, error)
 	CheckIfEmailIsRegistered(ctx context.Context, email string) (bool, error)
 	CheckIfPhoneIsRegistered(ctx context.Context, phoneNumber string) (bool, error)
 	CheckIfSocialNetworkIsRegistered(ctx context.Context, socialNetworkLink string) (bool, error)
+	CreateJoinRequest(ctx context.Context, arg CreateJoinRequestParams) (ClubJoinRequest, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	CreateWorkout(ctx context.Context, arg CreateWorkoutParams) (Workout, error)
 	DeleteUser(ctx context.Context, email string) error
+	GetJoinRequests(ctx context.Context, arg GetJoinRequestsParams) ([]ClubJoinRequest, error)
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
 	GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error)
 	UpdateClubJoinRequestStatus(ctx context.Context, arg UpdateClubJoinRequestStatusParams) (ClubJoinRequest, error)
