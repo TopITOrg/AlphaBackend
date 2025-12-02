@@ -13,9 +13,14 @@ import (
 	"sport_platform/internal/env_loader"
 	"sport_platform/internal/jwt"
 	"sport_platform/internal/middleware"
+	"sport_platform/internal/minio_config"
 	"sport_platform/internal/password"
 	"sport_platform/internal/service_wrapper"
 	"sport_platform/internal/sqlc/db"
+
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
+
 	"syscall"
 	"time"
 
@@ -46,10 +51,16 @@ func (appl *Application) GetEnv() error {
 		return err
 	}
 
+	var minioConfig minio_config.MinioConfig
+	if err := appEnvLoader.LoadDataIntoStruct(&minioConfig); err != nil {
+		return err
+	}
+
 	appl.configuration.
 		AddConfiguration(&dbConfig).
 		AddConfiguration(&passwordConfig).
-		AddConfiguration(&jwtConfig)
+		AddConfiguration(&jwtConfig).
+		AddConfiguration(&minioConfig)
 
 	return nil
 }
@@ -65,6 +76,27 @@ func (appl *Application) ConstructClients() error {
 		return dbConnectionError
 	}
 	appl.wrapper.Db = dbClient
+
+	minioConfig, minioConfigGetterError := appl.configuration.Get(&minio_config.MinioConfig{})
+	if minioConfigGetterError != nil {
+		return minioConfigGetterError
+	}
+
+	minioClient, minioConnectionError := minio.New(minioConfig.(*minio_config.MinioConfig).Endpoint, &minio.Options{
+		Creds: credentials.NewStaticV4(
+			minioConfig.(*minio_config.MinioConfig).AccessKeyID,
+			minioConfig.(*minio_config.MinioConfig).SecretKey,
+			"",
+		),
+		Secure: minioConfig.(*minio_config.MinioConfig).UseSSL,
+	})
+	if minioConnectionError != nil {
+		return minioConnectionError
+	}
+	if err := minio_config.InitBuckets(context.Background(), minioClient, minioConfig.(*minio_config.MinioConfig).BucketName); err != nil {
+		return err
+	}
+	appl.wrapper.Minio = minioClient
 
 	passwordConfig, passwordConfigGetterError := appl.configuration.Get(&password.PasswordConfig{})
 	if passwordConfigGetterError != nil {
