@@ -9,11 +9,12 @@ import (
 )
 
 type Querier interface {
-	CheckWorkoutExists(ctx context.Context, id int64) (bool, error)
 	CheckClubExists(ctx context.Context, id int64) (bool, error)
 	CheckClubOwnership(ctx context.Context, arg CheckClubOwnershipParams) (bool, error)
 	CheckEducationLevelExistsByName(ctx context.Context, name string) (bool, error)
 	CheckSportTypeExists(ctx context.Context, id int64) (bool, error)
+	CheckWorkoutExists(ctx context.Context, id int64) (bool, error)
+	CheckWorkoutOwnership(ctx context.Context, arg CheckWorkoutOwnershipParams) (bool, error)
 	CreateClub(ctx context.Context, arg CreateClubParams) (Club, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	GetClubByID(ctx context.Context, id int64) (Club, error)
@@ -21,9 +22,9 @@ type Querier interface {
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
 	GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error)
 	GetWorkoutsByClub(ctx context.Context, clubID int64) ([]GetWorkoutsByClubRow, error)
-	SoftDeleteWorkout(ctx context.Context, id int64) error
 	ListActiveClubs(ctx context.Context) ([]Club, error)
 	SoftDeleteClub(ctx context.Context, id int64) error
+	SoftDeleteWorkout(ctx context.Context, id int64) error
 }
 
 var _ Querier = (*Queries)(nil)

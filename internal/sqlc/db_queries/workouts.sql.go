@@ -7,8 +7,7 @@ package db_queries
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
+	"time"
 )
 
 const checkWorkoutExists = `-- name: CheckWorkoutExists :one
@@ -25,6 +24,28 @@ func (q *Queries) CheckWorkoutExists(ctx context.Context, id int64) (bool, error
 	return exists, err
 }
 
+const checkWorkoutOwnership = `-- name: CheckWorkoutOwnership :one
+SELECT EXISTS (
+    SELECT 1 FROM workouts w
+                      JOIN clubs c ON w.club_id = c.id
+    WHERE w.id = $1        
+      AND c.teacher_id = $2
+      AND w.is_deleted = FALSE
+)
+`
+
+type CheckWorkoutOwnershipParams struct {
+	ID        int64
+	TeacherID int64
+}
+
+func (q *Queries) CheckWorkoutOwnership(ctx context.Context, arg CheckWorkoutOwnershipParams) (bool, error) {
+	row := q.db.QueryRow(ctx, checkWorkoutOwnership, arg.ID, arg.TeacherID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const getWorkoutsByClub = `-- name: GetWorkoutsByClub :many
 SELECT id, club_id, start_date, end_date, cancelled, created_at, updated_at
 FROM workouts
@@ -35,11 +56,11 @@ ORDER BY start_date DESC
 type GetWorkoutsByClubRow struct {
 	ID        int64
 	ClubID    int64
-	StartDate pgtype.Timestamp
-	EndDate   pgtype.Timestamp
+	StartDate time.Time
+	EndDate   time.Time
 	Cancelled bool
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func (q *Queries) GetWorkoutsByClub(ctx context.Context, clubID int64) ([]GetWorkoutsByClubRow, error) {

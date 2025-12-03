@@ -14,3 +14,12 @@ SELECT EXISTS(
 UPDATE workouts
 SET is_deleted = TRUE, updated_at = NOW()
 WHERE id = $1;
+
+-- name: CheckWorkoutOwnership :one
+SELECT EXISTS (
+    SELECT 1 FROM workouts w
+                      JOIN clubs c ON w.club_id = c.id
+    WHERE w.id = $1        
+      AND c.teacher_id = $2
+      AND w.is_deleted = FALSE
+);
