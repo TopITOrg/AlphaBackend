@@ -14,5 +14,11 @@ func ClubController(engine *gin.Engine, wrapper *service_wrapper.Wrapper) {
 	})
 	routerGroup.DELETE("/:id", func(context *gin.Context) {
 		handlers.DeleteClubHandler(context, wrapper)
+  })
+	routerGroup.GET("/", func(context *gin.Context) {
+		handlers.GetClubsHandler(context, wrapper)
+	})
+	routerGroup.GET("/:id", func(context *gin.Context) {
+		handlers.GetClubHandler(context, wrapper)
 	})
 }
