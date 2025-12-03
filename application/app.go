@@ -128,6 +128,8 @@ func (appl *Application) Configure(engine *gin.Engine) error {
 
 	controllers.UserController(engine, appl.wrapper)
 
+	controllers.ClubController(engine, appl.wrapper)
+
 	controllers.WorkoutController(engine, appl.wrapper)
 
 	controllers.ClubJoinRequestController(engine, appl.wrapper)
