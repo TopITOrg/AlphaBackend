@@ -33,7 +33,7 @@ func DeleteUserHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 	}
 	userClaims := claimsRaw.(claims.UserClaims)
 
-	if userClaims.Email != request.Email && userClaims.Role != string(shared.Admin) {
+	if userClaims.Email != request.Email && userClaims.Role != shared.Admin {
 		ctx.JSON(
 			http.StatusForbidden,
 			gin.H{

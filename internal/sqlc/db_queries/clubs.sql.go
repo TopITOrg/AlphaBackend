@@ -7,7 +7,7 @@ package db_queries
 
 import (
 	"context"
-	"time"
+  "time"
 )
 
 const getAllClubs = `-- name: GetAllClubs :many
@@ -88,6 +88,243 @@ func (q *Queries) GetAllClubs(ctx context.Context) ([]GetAllClubsRow, error) {
 	return items, nil
 }
 
+const checkClubExists = `-- name: CheckClubExists :one
+SELECT EXISTS(
+    SELECT 1 FROM clubs
+    WHERE id = $1 AND is_deleted = FALSE
+)
+`
+
+func (q *Queries) CheckClubExists(ctx context.Context, id int64) (bool, error) {
+	row := q.db.QueryRow(ctx, checkClubExists, id)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
+const checkClubOwnership = `-- name: CheckClubOwnership :one
+SELECT EXISTS(
+    SELECT 1 FROM clubs
+    WHERE id = $1 AND teacher_id = $2 AND is_deleted = false
+)
+`
+
+type CheckClubOwnershipParams struct {
+	ID        int64
+	TeacherID int64
+}
+
+func (q *Queries) CheckClubOwnership(ctx context.Context, arg CheckClubOwnershipParams) (bool, error) {
+	row := q.db.QueryRow(ctx, checkClubOwnership, arg.ID, arg.TeacherID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
+const checkEducationLevelExistsByName = `-- name: CheckEducationLevelExistsByName :one
+SELECT EXISTS(
+    SELECT 1 FROM education_levels
+    WHERE name = $1
+)
+`
+
+func (q *Queries) CheckEducationLevelExistsByName(ctx context.Context, name string) (bool, error) {
+	row := q.db.QueryRow(ctx, checkEducationLevelExistsByName, name)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
+const checkSportTypeExists = `-- name: CheckSportTypeExists :one
+SELECT EXISTS(
+    SELECT 1 FROM sport_types
+    WHERE id = $1
+)
+`
+
+func (q *Queries) CheckSportTypeExists(ctx context.Context, id int64) (bool, error) {
+	row := q.db.QueryRow(ctx, checkSportTypeExists, id)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
+const createClub = `-- name: CreateClub :one
+INSERT INTO clubs (
+    name,
+    description,
+    sport_type_id,
+    teacher_id,
+    total_places,
+    place,
+    education_level_id,
+    required_workout_per_week
+) VALUES (
+             $1,
+             $2,
+             $3,
+             $4,
+             $5,
+             $6,
+             (SELECT id FROM education_levels WHERE education_levels.name = $7),
+             $8
+         )
+    RETURNING id, name, description, sport_type_id, teacher_id, total_places, place, education_level_id, required_workout_per_week, created_at, updated_at, is_deleted
+`
+
+type CreateClubParams struct {
+	Name                   string
+	Description            string
+	SportTypeID            int64
+	TeacherID              int64
+	TotalPlaces            *int32
+	Place                  string
+	EducationLevelName     string
+	RequiredWorkoutPerWeek int32
+}
+
+func (q *Queries) CreateClub(ctx context.Context, arg CreateClubParams) (Club, error) {
+	row := q.db.QueryRow(ctx, createClub,
+		arg.Name,
+		arg.Description,
+		arg.SportTypeID,
+		arg.TeacherID,
+		arg.TotalPlaces,
+		arg.Place,
+		arg.EducationLevelName,
+		arg.RequiredWorkoutPerWeek,
+	)
+	var i Club
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.SportTypeID,
+		&i.TeacherID,
+		&i.TotalPlaces,
+		&i.Place,
+		&i.EducationLevelID,
+		&i.RequiredWorkoutPerWeek,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsDeleted,
+	)
+	return i, err
+}
+
+const getClubByID = `-- name: GetClubByID :one
+SELECT id, name, description, sport_type_id, teacher_id, total_places, place, education_level_id, required_workout_per_week, created_at, updated_at, is_deleted FROM clubs WHERE id = $1 AND is_deleted = false
+`
+
+func (q *Queries) GetClubByID(ctx context.Context, id int64) (Club, error) {
+	row := q.db.QueryRow(ctx, getClubByID, id)
+	var i Club
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.SportTypeID,
+		&i.TeacherID,
+		&i.TotalPlaces,
+		&i.Place,
+		&i.EducationLevelID,
+		&i.RequiredWorkoutPerWeek,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsDeleted,
+	)
+	return i, err
+}
+
+const getClubsByTeacher = `-- name: GetClubsByTeacher :many
+SELECT id, name, description, sport_type_id, teacher_id, total_places, place, education_level_id, required_workout_per_week, created_at, updated_at, is_deleted FROM clubs
+WHERE teacher_id = $1 AND is_deleted = false
+ORDER BY created_at DESC
+`
+
+func (q *Queries) GetClubsByTeacher(ctx context.Context, teacherID int64) ([]Club, error) {
+	rows, err := q.db.Query(ctx, getClubsByTeacher, teacherID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Club{}
+	for rows.Next() {
+		var i Club
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.SportTypeID,
+			&i.TeacherID,
+			&i.TotalPlaces,
+			&i.Place,
+			&i.EducationLevelID,
+			&i.RequiredWorkoutPerWeek,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.IsDeleted,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listActiveClubs = `-- name: ListActiveClubs :many
+SELECT id, name, description, sport_type_id, teacher_id, total_places, place, education_level_id, required_workout_per_week, created_at, updated_at, is_deleted FROM clubs
+WHERE is_deleted = false
+ORDER BY name
+`
+
+func (q *Queries) ListActiveClubs(ctx context.Context) ([]Club, error) {
+	rows, err := q.db.Query(ctx, listActiveClubs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Club{}
+	for rows.Next() {
+		var i Club
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.SportTypeID,
+			&i.TeacherID,
+			&i.TotalPlaces,
+			&i.Place,
+			&i.EducationLevelID,
+			&i.RequiredWorkoutPerWeek,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.IsDeleted,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const softDeleteClub = `-- name: SoftDeleteClub :exec
+UPDATE clubs
+SET is_deleted = true, updated_at = NOW()
+WHERE id = $1
+`
+
+func (q *Queries) SoftDeleteClub(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, softDeleteClub, id)
+	return err
+}  
+  
 const getClubById = `-- name: GetClubById :one
 SELECT
     clubs.id,
