@@ -10,6 +10,98 @@ import (
 	"time"
 )
 
+const checkWorkoutExists = `-- name: CheckWorkoutExists :one
+SELECT EXISTS(
+    SELECT 1 FROM workouts
+    WHERE id = $1 AND is_deleted = FALSE
+)
+`
+
+func (q *Queries) CheckWorkoutExists(ctx context.Context, id int64) (bool, error) {
+	row := q.db.QueryRow(ctx, checkWorkoutExists, id)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
+const checkWorkoutOwnership = `-- name: CheckWorkoutOwnership :one
+SELECT EXISTS (
+    SELECT 1 FROM workouts w
+                      JOIN clubs c ON w.club_id = c.id
+    WHERE w.id = $1        
+      AND c.teacher_id = $2
+      AND w.is_deleted = FALSE
+)
+`
+
+type CheckWorkoutOwnershipParams struct {
+	ID        int64
+	TeacherID int64
+}
+
+func (q *Queries) CheckWorkoutOwnership(ctx context.Context, arg CheckWorkoutOwnershipParams) (bool, error) {
+	row := q.db.QueryRow(ctx, checkWorkoutOwnership, arg.ID, arg.TeacherID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
+const getWorkoutsByClub = `-- name: GetWorkoutsByClub :many
+SELECT id, club_id, start_date, end_date, cancelled, created_at, updated_at
+FROM workouts
+WHERE club_id = $1 AND is_deleted = FALSE AND cancelled = FALSE
+ORDER BY start_date DESC
+`
+
+type GetWorkoutsByClubRow struct {
+	ID        int64
+	ClubID    int64
+	StartDate time.Time
+	EndDate   time.Time
+	Cancelled bool
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+func (q *Queries) GetWorkoutsByClub(ctx context.Context, clubID int64) ([]GetWorkoutsByClubRow, error) {
+	rows, err := q.db.Query(ctx, getWorkoutsByClub, clubID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetWorkoutsByClubRow{}
+	for rows.Next() {
+		var i GetWorkoutsByClubRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ClubID,
+			&i.StartDate,
+			&i.EndDate,
+			&i.Cancelled,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const softDeleteWorkout = `-- name: SoftDeleteWorkout :exec
+UPDATE workouts
+SET is_deleted = TRUE, updated_at = NOW()
+WHERE id = $1
+`
+
+func (q *Queries) SoftDeleteWorkout(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, softDeleteWorkout, id)
+	return err
+}  
+  
 const createWorkout = `-- name: CreateWorkout :one
 INSERT INTO workouts
 (club_id, start_date, end_date)

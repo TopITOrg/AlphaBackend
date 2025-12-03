@@ -127,6 +127,8 @@ func (appl *Application) Configure(engine *gin.Engine) error {
 	engine.Use(middleware.AuthMiddleware(appl.wrapper))
 
 	controllers.UserController(engine, appl.wrapper)
+	controllers.ClubController(engine, appl.wrapper)
+	controllers.WorkoutController(engine, appl.wrapper)
 
 	controllers.ClubController(engine, appl.wrapper)
 
