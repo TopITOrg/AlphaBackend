@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"sport_platform/application/models/claims"
 	"sport_platform/application/models/create_club"
@@ -127,7 +126,7 @@ func CreateClubHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 		var uploadParams db_queries.UploadAttachmentParams
 		minioID, err := minio_config.UploadFile(ctx, wrapper.Minio, fileHeader, "clubs")
 		if err != nil {
-			log.Printf("Failed to upload file %s: %v", fileHeader.Filename, err)
+			fmt.Printf("Failed to upload file %s: %v", fileHeader.Filename, err)
 			ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 			return
 		}
