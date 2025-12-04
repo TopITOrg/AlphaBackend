@@ -130,7 +130,7 @@ func CreateClubHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 			return
 		}
-		minioUrl := fmt.Sprintf("http://minio/clubs/%s", minioID)
+		minioUrl := fmt.Sprintf("http://minio:9000/clubs/%s", minioID)
 		paramsMappingError := mapper.Mapper{}.Map(
 			&uploadParams,
 			struct {
