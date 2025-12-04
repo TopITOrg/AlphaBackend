@@ -106,3 +106,14 @@ FROM clubs
         JOIN education_levels ON clubs.education_level_id = education_levels.id AND education_levels.is_deleted = false
         JOIN users ON clubs.teacher_id = users.id AND users.is_deleted = false
 WHERE clubs.id = @id AND clubs.is_deleted = false;
+
+-- name: GetClubAttachments :many
+SELECT attachment_url
+FROM club_attachments
+WHERE club_id = @id;
+
+-- name: UploadAttachment :exec
+INSERT INTO club_attachments
+    (club_id, attachment_url)
+VALUES
+    (@club_id, @attachment_url);

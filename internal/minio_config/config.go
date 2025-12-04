@@ -2,7 +2,10 @@ package minio_config
 
 import (
 	"context"
+	"fmt"
+	"mime/multipart"
 
+	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 )
 
@@ -25,4 +28,29 @@ func InitBuckets(ctx context.Context, client *minio.Client, bucketName string) e
 		}
 	}
 	return nil
+}
+
+func UploadFile(ctx context.Context, client *minio.Client, fileHeader *multipart.FileHeader, bucket string) (string, error) {
+
+	minioID := uuid.New().String()
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		return "", fmt.Errorf("failed to open file: %w", err)
+	}
+	defer file.Close()
+
+	if fileHeader.Size > 10*1024*1024 {
+		return "", fmt.Errorf("file too large: %d bytes", fileHeader.Size)
+	}
+
+	_, err = client.PutObject(ctx, bucket, minioID, file, fileHeader.Size,
+		minio.PutObjectOptions{
+			ContentType: fileHeader.Header.Get("Content-Type"),
+		})
+	if err != nil {
+		return "", fmt.Errorf("minio upload failed: %w", err)
+	}
+
+	return minioID, nil
 }

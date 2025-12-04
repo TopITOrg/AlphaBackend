@@ -15,6 +15,7 @@ type GetClubResponse struct {
 	EducationLevelID       int64     `json:"education_level_id"`
 	EducationLevelName     string    `json:"education_level_name"`
 	RequiredWorkoutPerWeek int32     `json:"required_workout_per_week"`
+	Attachments            []string  `json:"attachments,omitempty"`
 	CreatedAt              time.Time `json:"created_at"`
 }
 

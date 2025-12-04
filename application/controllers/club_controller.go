@@ -12,9 +12,12 @@ func ClubController(engine *gin.Engine, wrapper *service_wrapper.Wrapper) {
 	routerGroup.POST("/create", func(context *gin.Context) {
 		handlers.CreateClubHandler(context, wrapper)
 	})
+	routerGroup.GET("/:id/workouts", func(context *gin.Context) {
+		handlers.GetClubWorkoutsHandler(context, wrapper)
+	})
 	routerGroup.DELETE("/:id", func(context *gin.Context) {
 		handlers.DeleteClubHandler(context, wrapper)
-  })
+	})
 	routerGroup.GET("/", func(context *gin.Context) {
 		handlers.GetClubsHandler(context, wrapper)
 	})

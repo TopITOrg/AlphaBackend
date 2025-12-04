@@ -7,86 +7,8 @@ package db_queries
 
 import (
 	"context"
-  "time"
+	"time"
 )
-
-const getAllClubs = `-- name: GetAllClubs :many
-SELECT
-    clubs.id,
-    clubs.name,
-    clubs.description,
-    clubs.sport_type_id,
-    clubs.teacher_id,
-    clubs.total_places,
-    clubs.place,
-    clubs.education_level_id,
-    clubs.required_workout_per_week,
-    clubs.created_at,
-    clubs.updated_at,
-    clubs.is_deleted,
-    sport_types.name as sport_type_name,
-    education_levels.name as education_level_name,
-    users.full_name as teacher_name
-FROM clubs
-        JOIN sport_types ON clubs.sport_type_id = sport_types.id AND sport_types.is_deleted = false
-        JOIN education_levels ON clubs.education_level_id = education_levels.id AND education_levels.is_deleted = false
-        JOIN users ON clubs.teacher_id = users.id AND users.is_deleted = false
-WHERE clubs.is_deleted = false
-`
-
-type GetAllClubsRow struct {
-	ID                     int64
-	Name                   string
-	Description            string
-	SportTypeID            int64
-	TeacherID              int64
-	TotalPlaces            *int32
-	Place                  string
-	EducationLevelID       int64
-	RequiredWorkoutPerWeek int32
-	CreatedAt              time.Time
-	UpdatedAt              time.Time
-	IsDeleted              bool
-	SportTypeName          string
-	EducationLevelName     string
-	TeacherName            string
-}
-
-func (q *Queries) GetAllClubs(ctx context.Context) ([]GetAllClubsRow, error) {
-	rows, err := q.db.Query(ctx, getAllClubs)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []GetAllClubsRow{}
-	for rows.Next() {
-		var i GetAllClubsRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Description,
-			&i.SportTypeID,
-			&i.TeacherID,
-			&i.TotalPlaces,
-			&i.Place,
-			&i.EducationLevelID,
-			&i.RequiredWorkoutPerWeek,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.IsDeleted,
-			&i.SportTypeName,
-			&i.EducationLevelName,
-			&i.TeacherName,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
 
 const checkClubExists = `-- name: CheckClubExists :one
 SELECT EXISTS(
@@ -212,6 +134,110 @@ func (q *Queries) CreateClub(ctx context.Context, arg CreateClubParams) (Club, e
 	return i, err
 }
 
+const getAllClubs = `-- name: GetAllClubs :many
+SELECT
+    clubs.id,
+    clubs.name,
+    clubs.description,
+    clubs.sport_type_id,
+    clubs.teacher_id,
+    clubs.total_places,
+    clubs.place,
+    clubs.education_level_id,
+    clubs.required_workout_per_week,
+    clubs.created_at,
+    clubs.updated_at,
+    clubs.is_deleted,
+    sport_types.name as sport_type_name,
+    education_levels.name as education_level_name,
+    users.full_name as teacher_name
+FROM clubs
+        JOIN sport_types ON clubs.sport_type_id = sport_types.id AND sport_types.is_deleted = false
+        JOIN education_levels ON clubs.education_level_id = education_levels.id AND education_levels.is_deleted = false
+        JOIN users ON clubs.teacher_id = users.id AND users.is_deleted = false
+WHERE clubs.is_deleted = false
+`
+
+type GetAllClubsRow struct {
+	ID                     int64
+	Name                   string
+	Description            string
+	SportTypeID            int64
+	TeacherID              int64
+	TotalPlaces            *int32
+	Place                  string
+	EducationLevelID       int64
+	RequiredWorkoutPerWeek int32
+	CreatedAt              time.Time
+	UpdatedAt              time.Time
+	IsDeleted              bool
+	SportTypeName          string
+	EducationLevelName     string
+	TeacherName            string
+}
+
+func (q *Queries) GetAllClubs(ctx context.Context) ([]GetAllClubsRow, error) {
+	rows, err := q.db.Query(ctx, getAllClubs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetAllClubsRow{}
+	for rows.Next() {
+		var i GetAllClubsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.SportTypeID,
+			&i.TeacherID,
+			&i.TotalPlaces,
+			&i.Place,
+			&i.EducationLevelID,
+			&i.RequiredWorkoutPerWeek,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.IsDeleted,
+			&i.SportTypeName,
+			&i.EducationLevelName,
+			&i.TeacherName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getClubAttachments = `-- name: GetClubAttachments :many
+SELECT attachment_url
+FROM club_attachments
+WHERE club_id = $1
+`
+
+func (q *Queries) GetClubAttachments(ctx context.Context, id int64) ([]string, error) {
+	rows, err := q.db.Query(ctx, getClubAttachments, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var attachment_url string
+		if err := rows.Scan(&attachment_url); err != nil {
+			return nil, err
+		}
+		items = append(items, attachment_url)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getClubByID = `-- name: GetClubByID :one
 SELECT id, name, description, sport_type_id, teacher_id, total_places, place, education_level_id, required_workout_per_week, created_at, updated_at, is_deleted FROM clubs WHERE id = $1 AND is_deleted = false
 `
@@ -232,6 +258,71 @@ func (q *Queries) GetClubByID(ctx context.Context, id int64) (Club, error) {
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.IsDeleted,
+	)
+	return i, err
+}
+
+const getClubById = `-- name: GetClubById :one
+SELECT
+    clubs.id,
+    clubs.name,
+    clubs.description,
+    clubs.sport_type_id,
+    clubs.teacher_id,
+    clubs.total_places,
+    clubs.place,
+    clubs.education_level_id,
+    clubs.required_workout_per_week,
+    clubs.created_at,
+    clubs.updated_at,
+    clubs.is_deleted,
+    sport_types.name as sport_type_name,
+    education_levels.name as education_level_name,
+    users.full_name as teacher_name
+FROM clubs
+        JOIN sport_types ON clubs.sport_type_id = sport_types.id AND sport_types.is_deleted = false
+        JOIN education_levels ON clubs.education_level_id = education_levels.id AND education_levels.is_deleted = false
+        JOIN users ON clubs.teacher_id = users.id AND users.is_deleted = false
+WHERE clubs.id = $1 AND clubs.is_deleted = false
+`
+
+type GetClubByIdRow struct {
+	ID                     int64
+	Name                   string
+	Description            string
+	SportTypeID            int64
+	TeacherID              int64
+	TotalPlaces            *int32
+	Place                  string
+	EducationLevelID       int64
+	RequiredWorkoutPerWeek int32
+	CreatedAt              time.Time
+	UpdatedAt              time.Time
+	IsDeleted              bool
+	SportTypeName          string
+	EducationLevelName     string
+	TeacherName            string
+}
+
+func (q *Queries) GetClubById(ctx context.Context, id int64) (GetClubByIdRow, error) {
+	row := q.db.QueryRow(ctx, getClubById, id)
+	var i GetClubByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.SportTypeID,
+		&i.TeacherID,
+		&i.TotalPlaces,
+		&i.Place,
+		&i.EducationLevelID,
+		&i.RequiredWorkoutPerWeek,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsDeleted,
+		&i.SportTypeName,
+		&i.EducationLevelName,
+		&i.TeacherName,
 	)
 	return i, err
 }
@@ -323,69 +414,21 @@ WHERE id = $1
 func (q *Queries) SoftDeleteClub(ctx context.Context, id int64) error {
 	_, err := q.db.Exec(ctx, softDeleteClub, id)
 	return err
-}  
-  
-const getClubById = `-- name: GetClubById :one
-SELECT
-    clubs.id,
-    clubs.name,
-    clubs.description,
-    clubs.sport_type_id,
-    clubs.teacher_id,
-    clubs.total_places,
-    clubs.place,
-    clubs.education_level_id,
-    clubs.required_workout_per_week,
-    clubs.created_at,
-    clubs.updated_at,
-    clubs.is_deleted,
-    sport_types.name as sport_type_name,
-    education_levels.name as education_level_name,
-    users.full_name as teacher_name
-FROM clubs
-        JOIN sport_types ON clubs.sport_type_id = sport_types.id AND sport_types.is_deleted = false
-        JOIN education_levels ON clubs.education_level_id = education_levels.id AND education_levels.is_deleted = false
-        JOIN users ON clubs.teacher_id = users.id AND users.is_deleted = false
-WHERE clubs.id = $1 AND clubs.is_deleted = false
-`
-
-type GetClubByIdRow struct {
-	ID                     int64
-	Name                   string
-	Description            string
-	SportTypeID            int64
-	TeacherID              int64
-	TotalPlaces            *int32
-	Place                  string
-	EducationLevelID       int64
-	RequiredWorkoutPerWeek int32
-	CreatedAt              time.Time
-	UpdatedAt              time.Time
-	IsDeleted              bool
-	SportTypeName          string
-	EducationLevelName     string
-	TeacherName            string
 }
 
-func (q *Queries) GetClubById(ctx context.Context, id int64) (GetClubByIdRow, error) {
-	row := q.db.QueryRow(ctx, getClubById, id)
-	var i GetClubByIdRow
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Description,
-		&i.SportTypeID,
-		&i.TeacherID,
-		&i.TotalPlaces,
-		&i.Place,
-		&i.EducationLevelID,
-		&i.RequiredWorkoutPerWeek,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.IsDeleted,
-		&i.SportTypeName,
-		&i.EducationLevelName,
-		&i.TeacherName,
-	)
-	return i, err
+const uploadAttachment = `-- name: UploadAttachment :exec
+INSERT INTO club_attachments
+    (club_id, attachment_url)
+VALUES
+    ($1, $2)
+`
+
+type UploadAttachmentParams struct {
+	ClubID        int64
+	AttachmentUrl string
+}
+
+func (q *Queries) UploadAttachment(ctx context.Context, arg UploadAttachmentParams) error {
+	_, err := q.db.Exec(ctx, uploadAttachment, arg.ClubID, arg.AttachmentUrl)
+	return err
 }

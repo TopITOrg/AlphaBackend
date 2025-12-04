@@ -127,8 +127,6 @@ func (appl *Application) Configure(engine *gin.Engine) error {
 	engine.Use(middleware.AuthMiddleware(appl.wrapper))
 
 	controllers.UserController(engine, appl.wrapper)
-	controllers.ClubController(engine, appl.wrapper)
-	controllers.WorkoutController(engine, appl.wrapper)
 
 	controllers.ClubController(engine, appl.wrapper)
 
@@ -141,7 +139,7 @@ func (appl *Application) Configure(engine *gin.Engine) error {
 func (appl *Application) Run() {
 	engine := gin.New()
 	server := &http.Server{
-		Addr:    "localhost:8080",
+		Addr:    "0.0.0.0:8080",
 		Handler: engine,
 	}
 
