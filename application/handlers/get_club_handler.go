@@ -42,9 +42,29 @@ func GetClubHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 		)
 		return
 	}
+	clubAttachments, dbError := wrapper.Db.Queries.GetClubAttachments(ctx, request.ID)
+	if dbError != nil {
+		fmt.Printf("Error happened getting club attachments: %s\n", dbError)
+
+		ctx.JSON(
+			http.StatusInternalServerError,
+			gin.H{
+				"message": "Something unusual happened",
+			},
+		)
+		return
+	}
 
 	var response get_clubs.GetClubResponse
-	mappingError := mapper.Mapper{}.Map(&response, club)
+	mappingError := mapper.Mapper{}.Map(
+		&response,
+		club,
+		struct {
+			Attachments []string
+		}{
+			Attachments: clubAttachments,
+		},
+	)
 
 	if mappingError != nil {
 		fmt.Printf("Club mapping error: %s\n", mappingError)

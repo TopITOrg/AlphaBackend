@@ -49,6 +49,11 @@ type Club struct {
 	IsDeleted              bool
 }
 
+type ClubAttachment struct {
+	ClubID        int64
+	AttachmentUrl string
+}
+
 type ClubJoinRequest struct {
 	ID        int64
 	ClubID    int64

@@ -12,6 +12,7 @@ type CreateClubResponse struct {
 	Place                  string    `json:"place"`
 	EducationLevelID       int64     `json:"education_level_id"`
 	RequiredWorkoutPerWeek int       `json:"required_workout_per_week"`
+	Attachments            []string  `json:"attachments"`
 	CreatedAt              time.Time `json:"created_at"`
 	UpdatedAt              time.Time `json:"updated_at"`
 }

@@ -8,6 +8,7 @@ import (
 	"sport_platform/application/models/shared"
 	"sport_platform/internal/mapper"
 	"sport_platform/internal/middleware"
+	"sport_platform/internal/minio_config"
 	"sport_platform/internal/service_wrapper"
 	"sport_platform/internal/sqlc/db_queries"
 
@@ -107,9 +108,73 @@ func CreateClubHandler(ctx *gin.Context, wrapper *service_wrapper.Wrapper) {
 		return
 	}
 
+	if err := ctx.Request.ParseMultipartForm(32 << 20); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Failed to parse form"})
+		return
+	}
+
+	form, err := ctx.MultipartForm()
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Failed to parse form"})
+		return
+	}
+
+	files := form.File["attachments"]
+	var uploadedFilesUrls []string
+
+	for _, fileHeader := range files {
+		var uploadParams db_queries.UploadAttachmentParams
+		minioID, err := minio_config.UploadFile(ctx, wrapper.Minio, fileHeader, "clubs")
+		if err != nil {
+			fmt.Printf("Failed to upload file %s: %v", fileHeader.Filename, err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			return
+		}
+		minioUrl := fmt.Sprintf("http://minio:9000/clubs/%s", minioID)
+		paramsMappingError := mapper.Mapper{}.Map(
+			&uploadParams,
+			struct {
+				ClubID        int64
+				AttachmentUrl string
+			}{
+				ClubID:        club.ID,
+				AttachmentUrl: minioUrl,
+			},
+		)
+
+		if paramsMappingError != nil {
+			fmt.Println(paramsMappingError)
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Unknown error",
+			})
+			return
+		}
+		if dbError := wrapper.Db.Queries.UploadAttachment(ctx, uploadParams); dbError != nil {
+			fmt.Printf("Error happened uploading attachment: %s\n", dbError)
+
+			ctx.JSON(
+				http.StatusInternalServerError,
+				gin.H{
+					"message": "Something unusual happened",
+				},
+			)
+			return
+		}
+
+		uploadedFilesUrls = append(uploadedFilesUrls, minioUrl)
+	}
+
 	var response create_club.CreateClubResponse
 
-	responseMappingError := mapper.Mapper{}.Map(&response, club)
+	responseMappingError := mapper.Mapper{}.Map(
+		&response,
+		club,
+		struct {
+			Attachments []string
+		}{
+			Attachments: uploadedFilesUrls,
+		},
+	)
 	if responseMappingError != nil {
 		fmt.Println(responseMappingError)
 		ctx.JSON(http.StatusInternalServerError, gin.H{

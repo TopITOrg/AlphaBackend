@@ -46,6 +46,36 @@ func (q *Queries) CheckWorkoutOwnership(ctx context.Context, arg CheckWorkoutOwn
 	return exists, err
 }
 
+const createWorkout = `-- name: CreateWorkout :one
+INSERT INTO workouts
+(club_id, start_date, end_date)
+VALUES
+($1, $2, $3)
+RETURNING workouts.id, workouts.club_id, workouts.start_date, workouts.end_date, workouts.cancelled, workouts.created_at, workouts.updated_at, workouts.is_deleted
+`
+
+type CreateWorkoutParams struct {
+	ClubID    int64
+	StartDate time.Time
+	EndDate   time.Time
+}
+
+func (q *Queries) CreateWorkout(ctx context.Context, arg CreateWorkoutParams) (Workout, error) {
+	row := q.db.QueryRow(ctx, createWorkout, arg.ClubID, arg.StartDate, arg.EndDate)
+	var i Workout
+	err := row.Scan(
+		&i.ID,
+		&i.ClubID,
+		&i.StartDate,
+		&i.EndDate,
+		&i.Cancelled,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsDeleted,
+	)
+	return i, err
+}
+
 const getWorkoutsByClub = `-- name: GetWorkoutsByClub :many
 SELECT id, club_id, start_date, end_date, cancelled, created_at, updated_at
 FROM workouts
@@ -100,36 +130,6 @@ WHERE id = $1
 func (q *Queries) SoftDeleteWorkout(ctx context.Context, id int64) error {
 	_, err := q.db.Exec(ctx, softDeleteWorkout, id)
 	return err
-}  
-  
-const createWorkout = `-- name: CreateWorkout :one
-INSERT INTO workouts
-(club_id, start_date, end_date)
-VALUES
-($1, $2, $3)
-RETURNING workouts.id, workouts.club_id, workouts.start_date, workouts.end_date, workouts.cancelled, workouts.created_at, workouts.updated_at, workouts.is_deleted
-`
-
-type CreateWorkoutParams struct {
-	ClubID    int64
-	StartDate time.Time
-	EndDate   time.Time
-}
-
-func (q *Queries) CreateWorkout(ctx context.Context, arg CreateWorkoutParams) (Workout, error) {
-	row := q.db.QueryRow(ctx, createWorkout, arg.ClubID, arg.StartDate, arg.EndDate)
-	var i Workout
-	err := row.Scan(
-		&i.ID,
-		&i.ClubID,
-		&i.StartDate,
-		&i.EndDate,
-		&i.Cancelled,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.IsDeleted,
-	)
-	return i, err
 }
 
 const updateWorkout = `-- name: UpdateWorkout :one

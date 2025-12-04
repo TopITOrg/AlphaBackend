@@ -1,19 +1,28 @@
-FROM golang:1.24.5-alpine3.22 AS build
+FROM golang:1.24-alpine3.21 AS builder
 
 WORKDIR /app
-RUN apk add --no-cache curl
-RUN curl -fsSL https://raw.githubusercontent.com/pressly/goose/master/install.sh | sh
+
+COPY go.mod go.sum ./
+RUN go mod download
+
 COPY . .
 
-RUN go mod download
-RUN go build -o Bot github.com/unspokenteam/golang-tg-dbot
+RUN go build -ldflags="-w -s" -o go-server main.go && \
+    go install github.com/pressly/goose/v3/cmd/goose@latest
 
-FROM alpine:3.22
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates
 WORKDIR /app
 
-COPY --from=build /app/application .
-COPY --from=build /usr/local/bin/goose /usr/local/bin/goose
-COPY ./sql ./sql
+COPY --from=builder /app/go-server /app/go-server
+COPY --from=builder /go/bin/goose /usr/local/bin/goose
+COPY --from=builder /app/internal/sqlc/migrations ./migrations
 
-EXPOSE 8000
-ENTRYPOINT goose -dir ./sql postgres "host=$DB_HOST port=$DB_PORT user=$DB_USER dbname=$DB_NAME password=$DB_PASSWORD sslmode=disable" up && ./application
+COPY entrypoint.sh /app/entrypoint.sh
+RUN ls -la /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+EXPOSE 8080
+
+CMD ["/app/entrypoint.sh"]
